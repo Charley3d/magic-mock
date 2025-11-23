@@ -114,3 +114,5 @@ if (document.readyState === 'loading') {
 } else {
   createButtons()
 }
+
+export type RecordingMode = 'recording' | 'mocking' | 'off'
