@@ -1,0 +1,96 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+__screenshots__/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vite/
+.eslintcache
+
+# Request recording cache (plugin-specific)
+.request-cache/
+
+# IDE and editor files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+*.local
+
+# AI related files
+.claude/
+.cursor/
+.aider*
+.copilot/
+.codeium/
+.tabnine/
+.ai-*
+*.ai
+cursor.rules
+.cursorrules
+CLAUDE.md
+.anthropic/
+.openai/
+claude-*.json
+gpt-*.json
+ai-*.json
+.llm/
+.assistant/
+
+# Cypress
+/cypress/videos/
+/cypress/screenshots/
