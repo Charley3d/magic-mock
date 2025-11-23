@@ -10,28 +10,58 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./vite": {
       "types": "./dist/vite.d.ts",
-      "import": "./dist/vite.js",
-      "require": "./dist/vite.cjs"
+      "import": {
+        "types": "./dist/vite.d.mts",
+        "default": "./dist/vite.mjs"
+      },
+      "require": {
+        "types": "./dist/vite.d.cts",
+        "default": "./dist/vite.cjs"
+      }
     },
     "./webpack": {
       "types": "./dist/webpack.d.ts",
-      "import": "./dist/webpack.js",
-      "require": "./dist/webpack.cjs"
+      "import": {
+        "types": "./dist/webpack.d.mts",
+        "default": "./dist/webpack.mjs"
+      },
+      "require": {
+        "types": "./dist/webpack.d.cts",
+        "default": "./dist/webpack.cjs"
+      }
     },
     "./rollup": {
       "types": "./dist/rollup.d.ts",
-      "import": "./dist/rollup.js",
-      "require": "./dist/rollup.cjs"
+      "import": {
+        "types": "./dist/rollup.d.mts",
+        "default": "./dist/rollup.mjs"
+      },
+      "require": {
+        "types": "./dist/rollup.d.cts",
+        "default": "./dist/rollup.cjs"
+      }
     },
     "./esbuild": {
       "types": "./dist/esbuild.d.ts",
-      "import": "./dist/esbuild.js",
-      "require": "./dist/esbuild.cjs"
+      "import": {
+        "types": "./dist/esbuild.d.mts",
+        "default": "./dist/esbuild.mjs"
+      },
+      "require": {
+        "types": "./dist/esbuild.d.cts",
+        "default": "./dist/esbuild.cjs"
+      }
     }
   },
   "files": [
@@ -46,13 +76,16 @@
   },
   "dependencies": {
     "@magicmock/core": "workspace:*",
-    "unplugin": "^2.3.11"
+    "unplugin": "^2.3.11",
+    "esbuild": "^0.27.0"
   },
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0",
     "webpack": "^4.0.0 || ^5.0.0",
     "rollup": "^3.0.0 || ^4.0.0",
-    "esbuild": ">=0.18.0"
+    "esbuild": ">=0.18.0",
+    "html-webpack-plugin": "^5.0.0",
+    "webpack-dev-server": "^4.0.0 || ^5.0.0"
   },
   "peerDependenciesMeta": {
     "vite": {
@@ -65,6 +98,12 @@
       "optional": true
     },
     "esbuild": {
+      "optional": true
+    },
+    "html-webpack-plugin": {
+      "optional": true
+    },
+    "webpack-dev-server": {
       "optional": true
     }
   },

@@ -3,7 +3,7 @@ import { setupWorker } from 'msw/browser'
 
 // Load state from localStorage to persist across page navigations
 let isRecording = localStorage.getItem('msw-recording') === 'true'
-let isMocking = localStorage.getItem('msw-mocking') === 'true'
+let isMocking = () => localStorage.getItem('msw-mocking') === 'true'
 
 const originalFetch = window.fetch
 
@@ -11,7 +11,7 @@ const worker = setupWorker(
   http.get(/^(?!.*\/(api\/__)).*$/, async ({ request }) => {
     const url = request.url
     // Mock mode: serve from cache if available
-    if (isMocking) {
+    if (isMocking()) {
       try {
         const cacheResponse = await originalFetch('/api/__get-cache?url=' + encodeURIComponent(url))
         if (cacheResponse.ok) {
@@ -31,12 +31,10 @@ const worker = setupWorker(
   }),
 )
 
-// Start worker if needed
-if (isRecording || isMocking) {
-  worker.start({ onUnhandledRequest: 'bypass', quiet: true })
-}
+// Start worker
+worker.start({ onUnhandledRequest: 'bypass', quiet: true })
 
-// Override fetch for recording (lighter than MSW bypass)
+// Override fetch for recording
 window.fetch = async function (...args: Parameters<typeof fetch>) {
   const response = await originalFetch(...args)
   if (!isRecording) {
@@ -83,9 +81,9 @@ function createButtons() {
   }; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);`
 
   const mockBtn = document.createElement('button')
-  mockBtn.textContent = isMocking ? '✓ Mocking' : '🔄 Mock'
+  mockBtn.textContent = isMocking() ? '✓ Mocking' : '🔄 Mock'
   mockBtn.style.cssText = `padding: 10px 15px; background: ${
-    isMocking ? '#0000ff' : '#4444ff'
+    isMocking() ? '#0000ff' : '#4444ff'
   }; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);`
 
   recordBtn.onclick = () => {
@@ -97,11 +95,11 @@ function createButtons() {
   }
 
   mockBtn.onclick = () => {
-    isMocking = !isMocking
-    localStorage.setItem('msw-mocking', isMocking.toString())
-    mockBtn.style.background = isMocking ? '#0000ff' : '#4444ff'
-    mockBtn.textContent = isMocking ? '✓ Mocking' : '🔄 Mock'
-    console.log('Mocking:', isMocking)
+    const newIsMocking = !isMocking()
+    localStorage.setItem('msw-mocking', newIsMocking.toString())
+    mockBtn.style.background = newIsMocking ? '#0000ff' : '#4444ff'
+    mockBtn.textContent = newIsMocking ? '✓ Mocking' : '🔄 Mock'
+    console.log('Mocking:', newIsMocking)
   }
 
   container.appendChild(recordBtn)
