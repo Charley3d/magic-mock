@@ -7,14 +7,27 @@ Magic Mock is a zero-config development tool that records your API responses and
 [![npm version](https://img.shields.io/npm/v/@magicmock/unplugin.svg)](https://www.npmjs.com/package/@magicmock/unplugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## ⚠️ Work in Progress
+
+This project is under active development. APIs may change and some features are still being implemented. Feedback and contributions are welcome!
+
+## Bundler Support
+
+| Bundler   | Status | Notes                                               |
+| --------- | ------ | --------------------------------------------------- |
+| Vite      | ✅     | Fully supported                                     |
+| Webpack 5 | ✅     | Supported with manual middleware config for Vue CLI |
+| Rollup    | ❌     | Planned                                             |
+| esbuild   | ❌     | Planned                                             |
+
 ## Features
 
-- 🎯 **Zero Configuration** - Works out of the box with Vite, Webpack, Rollup, and esbuild
+- 🎯 **Zero Configuration** - Works out of the box with Vite
 - 🚀 **Instant Responses** - Serve cached API responses at lightning speed
 - 🎨 **Visual Controls** - Toggle recording/mocking with sticky UI buttons
 - 💾 **Persistent Cache** - Responses saved to filesystem, shareable with your team
 - 🔄 **Hot Reload Friendly** - State persists across page reloads
-- 🌐 **Universal** - Works with fetch, axios, jQuery, and any HTTP library
+- 🌐 **Universal** - Works with fetch, axios, and any HTTP library
 
 ## Quick Start
 
@@ -51,7 +64,7 @@ export default defineConfig({
 })
 ```
 
-**Webpack:**
+**Webpack (pure):**
 
 ```javascript
 // webpack.config.js
@@ -60,26 +73,91 @@ const MagicMock = require('@magicmock/unplugin/webpack')
 module.exports = {
   plugins: [
     MagicMock({
-      // options
+      cacheDir: '.request-cache',
+      enabled: true,
     }),
   ],
 }
 ```
 
-**Rollup:**
+**Vue CLI (Webpack):**
 
 ```javascript
-// rollup.config.js
-import MagicMock from '@magicmock/unplugin/rollup'
+// vue.config.js
+const { defineConfig } = require('@vue/cli-service')
+const MagicMockPlugin = require('@magicmock/unplugin/webpack')
+const fs = require('fs')
+const path = require('path')
 
-export default {
-  plugins: [
-    MagicMock({
-      // options
-    }),
-  ],
-}
+module.exports = defineConfig({
+  configureWebpack: {
+    plugins: [
+      MagicMockPlugin({
+        cacheDir: '.request-cache',
+        enabled: true,
+      }),
+    ],
+  },
+
+  // Manual middleware setup required for Vue CLI
+  devServer: {
+    setupMiddlewares: (middlewares, devServer) => {
+      const cacheDir = path.join(process.cwd(), '.request-cache')
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true })
+      }
+
+      // Record endpoint
+      devServer.app.post('/api/__record', (req, res) => {
+        let body = ''
+        req.on('data', (chunk) => (body += chunk))
+        req.on('end', () => {
+          try {
+            const { url, response, status, headers } = JSON.parse(body)
+            const filename = Buffer.from(url).toString('base64').replace(/[/+=]/g, '_') + '.json'
+            fs.writeFileSync(
+              path.join(cacheDir, filename),
+              JSON.stringify({ url, response, status, headers }, null, 2),
+            )
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ success: true }))
+          } catch (error) {
+            res.writeHead(500)
+            res.end()
+          }
+        })
+      })
+
+      // Get cache endpoint
+      devServer.app.get('/api/__get-cache', (req, res) => {
+        const url = req.query.url
+        if (!url) {
+          res.writeHead(400)
+          res.end()
+          return
+        }
+        const decodedUrl = decodeURIComponent(url)
+        const filename = Buffer.from(decodedUrl).toString('base64').replace(/[/+=]/g, '_') + '.json'
+        const filepath = path.join(cacheDir, filename)
+        if (fs.existsSync(filepath)) {
+          const cached = JSON.parse(fs.readFileSync(filepath, 'utf-8'))
+          res.writeHead(200, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify(cached))
+        } else {
+          res.writeHead(404)
+          res.end()
+        }
+      })
+
+      return middlewares
+    },
+  },
+})
 ```
+
+**Rollup & esbuild:**
+
+_Coming soon! Stay tuned for updates._
 
 ## Usage
 
@@ -153,6 +231,21 @@ interface MagicMockOptions {
 | Auto Recording | ✅         | ✅       | ❌           | ❌        |
 | File Storage   | ✅         | ✅       | Manual       | Manual    |
 
+## Known Limitations
+
+- Vue CLI requires manual middleware configuration (see setup above)
+- Rollup and esbuild support coming soon
+- XHR (XMLHttpRequest) not yet supported - fetch API only
+
+## Roadmap
+
+- [ ] Rollup plugin implementation
+- [ ] esbuild plugin implementation
+- [ ] XHR support
+- [ ] Improved Vue CLI integration
+- [ ] UI for cache management
+- [ ] Configuration options for excluded URLs
+
 ## Contributing
 
 Contributions welcome! This is a monorepo managed with pnpm.
@@ -167,7 +260,7 @@ pnpm build
 # Run in dev mode
 pnpm dev
 
-# Run example
+# Run examples
 cd examples/vite-vue
 pnpm dev
 ```
