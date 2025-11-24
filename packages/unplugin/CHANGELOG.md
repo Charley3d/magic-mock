@@ -1,5 +1,11 @@
 # @magicmock/unplugin
 
+## 0.3.0
+
+### Minor Changes
+
+- 1b9f5ad: Add msw as dependencies of unplugin package
+
 ## 0.2.0
 
 ### Minor Changes

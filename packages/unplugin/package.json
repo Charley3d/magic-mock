@@ -1,6 +1,6 @@
 {
   "name": "@magicmock/unplugin",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Universal plugin for Magic Mock - works with Vite, Webpack, Rollup, and esbuild",
   "author": "Charley <charley.makevideo@gmail.com>",
   "license": "MIT",
