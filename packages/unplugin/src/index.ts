@@ -1,6 +1,7 @@
 import { build } from 'esbuild'
 import fs from 'fs'
 import type HtmlWebpackPlugin from 'html-webpack-plugin'
+import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import path from 'path'
@@ -10,6 +11,7 @@ import type { ViteDevServer } from 'vite'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+const require = createRequire(import.meta.url)
 
 export interface MagicMockOptions {
   /**
@@ -41,12 +43,12 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
           fs.mkdirSync(mswLibDir, { recursive: true })
         }
 
-        const unifiedEntry = path.join(__dirname, '../../core/_unified-entry.js')
+        const unifiedEntry = path.join(__dirname, '_unified-entry.js')
         fs.writeFileSync(
           unifiedEntry,
           `
-          export * from 'msw'
-          export * from 'msw/browser'
+          export { http, HttpResponse, passthrough } from 'msw'
+          export { setupWorker } from 'msw/browser'
         `,
         )
 
@@ -65,10 +67,7 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
 
           console.log('✅ MSW bundled to public/__msw/msw-bundle.js')
 
-          const mswServiceWorkerSource = path.join(
-            __dirname,
-            '../../core/node_modules/msw/lib/mockServiceWorker.js',
-          )
+          const mswServiceWorkerSource = require.resolve('msw/mockServiceWorker.js')
           const mswServiceWorkerDest = path.join(publicDir, 'mockServiceWorker.js')
 
           if (fs.existsSync(mswServiceWorkerSource)) {

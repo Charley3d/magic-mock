@@ -17,8 +17,8 @@ This project is under active development. APIs may change and some features are 
 | --------- | ------ | --------------------------------------------------- |
 | Vite      | ✅     | Fully supported                                     |
 | Webpack 5 | ✅     | Supported with manual middleware config for Vue CLI |
-| Rollup    | ❌     | Planned                                             |
-| esbuild   | ❌     | Planned                                             |
+| Rollup    | 🚧     | Planned                                             |
+| esbuild   | ❌     | Not applicable (no dev server)                      |
 
 ## Features
 
@@ -155,7 +155,7 @@ module.exports = defineConfig({
 })
 ```
 
-**Rollup & esbuild:**
+**Rollup:**
 
 _Coming soon! Stay tuned for updates._
 
@@ -234,13 +234,12 @@ interface MagicMockOptions {
 ## Known Limitations
 
 - Vue CLI requires manual middleware configuration (see setup above)
-- Rollup and esbuild support coming soon
+- Rollup support coming soon
 - XHR (XMLHttpRequest) not yet supported - fetch API only
 
 ## Roadmap
 
 - [ ] Rollup plugin implementation
-- [ ] esbuild plugin implementation
 - [ ] XHR support
 - [ ] Improved Vue CLI integration
 - [ ] UI for cache management
