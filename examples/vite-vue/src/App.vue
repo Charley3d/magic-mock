@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { initMagicMock } from '@magicmock/core/standalone'
+import { onMounted, ref } from 'vue'
 
 interface Pokemon {
   name: string
@@ -33,6 +34,7 @@ const fetchPokemon = async () => {
 }
 
 onMounted(() => {
+  initMagicMock()
   fetchPokemon()
 })
 </script>
