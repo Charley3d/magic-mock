@@ -1,10 +1,10 @@
-import { http, HttpResponse, passthrough } from 'msw'
+import { http, passthrough } from 'msw'
 import { setupWorker } from 'msw/browser'
-import { LocalRecorder, RemoteRecorder } from './Recorder'
+import { LocalStore, RemoteStore } from './store'
 import { getURL, isApi, isMedia, isMethodAllowed } from './utils'
 
 declare const __STANDALONE__: boolean
-const storage = __STANDALONE__ ? new LocalRecorder() : new RemoteRecorder()
+const storage = __STANDALONE__ ? new LocalStore() : new RemoteStore()
 const originalFetch = window.fetch
 const isRecording = () => localStorage.getItem('msw-recording') === 'true'
 const isMocking = () => localStorage.getItem('msw-mocking') === 'true'
@@ -64,33 +64,8 @@ async function tryGetFromStore(url: URL) {
     throw new Error('Not in mocking mode')
   }
 
-  // TODO: Implement GET method
-  try {
-    storage.get(originalFetch, {
-      url: safeUrl.href,
-      data,
-      response,
-    })
-  } catch (e) {
-    console.error('Error while storing response', e)
-  }
-
-  const cacheResponse = await originalFetch('/api/__get-cache?url=' + encodeURIComponent(url.href))
-
-  if (!cacheResponse.ok) {
-    throw new Error('Cache not found, response.ok === false')
-  }
-
-  const cached = await cacheResponse.json()
-  console.log('🔄 Serving from cache:', url)
-
-  if (typeof cached.response === 'string') {
-    return new HttpResponse(cached.response, { status: cached.status, headers: cached.headers })
-  }
-
-  return HttpResponse.json(cached.response, {
-    status: cached.status,
-    headers: cached.headers,
+  return storage.get(originalFetch, {
+    url: url.href,
   })
 }
 
@@ -166,4 +141,8 @@ function createButtons() {
   container.appendChild(recordBtn)
   container.appendChild(mockBtn)
   document.body.appendChild(container)
+}
+
+if (!__STANDALONE__) {
+  initMagicMock()
 }

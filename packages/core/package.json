@@ -19,6 +19,7 @@
       "default": "./dist/client-script.js"
     },
     "./standalone": {
+      "types": "./dist/standalone.d.ts",
       "import": "./dist/standalone.js",
       "default": "./dist/standalone.js"
     }
@@ -28,7 +29,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.json ",
+    "build": "tsc --project tsconfig.json && esbuild ./src/client-script.ts --bundle --format=esm --outfile=./dist/client-script.js --define:__STANDALONE__=false && pnpm build:standalone",
     "build:standalone": "esbuild ./src/client-script.ts --bundle --format=esm --outfile=./dist/standalone.js --define:__STANDALONE__=true && tsc --project ./tsconfig.json --emitDeclarationOnly",
     "dev": "tsc --watch --project tsconfig.json",
     "clean": "rm -rf dist",

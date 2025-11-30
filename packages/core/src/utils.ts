@@ -33,6 +33,6 @@ export const getURL = (input: string | URL | Request): URL | null => {
 }
 
 export const isMethodAllowed = (method: string) => {
-  const allowdMethods = ['GET']
-  return allowdMethods.includes(method.toUpperCase())
+  const allowedMethods = ['GET']
+  return allowedMethods.includes(method.toUpperCase())
 }
