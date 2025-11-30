@@ -38,7 +38,6 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
     // Vite-specific hooks
     vite: {
       async buildStart() {
-        return
         // Copy MSW browser bundle
         if (!fs.existsSync(mswLibDir)) {
           fs.mkdirSync(mswLibDir, { recursive: true })
@@ -139,7 +138,6 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
       },
 
       transformIndexHtml() {
-        return
         // Read the compiled client script from core package
         const clientScriptPath = require.resolve('@magicmock/core/client')
 

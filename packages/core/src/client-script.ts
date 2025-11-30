@@ -1,6 +1,8 @@
 import { http, HttpResponse, passthrough } from 'msw'
 import { setupWorker } from 'msw/browser'
-import { isMedia } from './utils'
+import { LocalRecorder, RemoteRecorder } from './Recorder'
+import { isApi, isMedia } from './utils'
+declare const __STANDALONE__: boolean
 
 export function initMagicMock() {
   // Load state from localStorage to persist across page navigations
@@ -8,10 +10,11 @@ export function initMagicMock() {
   let isMocking = () => localStorage.getItem('msw-mocking') === 'true'
 
   const originalFetch = window.fetch
+  const storage = __STANDALONE__ ? new LocalRecorder() : new RemoteRecorder()
 
   const worker = setupWorker(
-    http.get(/^(?!.*\/(api\/__)).*$/, async ({ request }) => {
-      if (isMedia(request)) {
+    http.get('*', async ({ request }) => {
+      if (isMedia(request) || isApi(request)) {
         return passthrough()
       }
       const url = request.url

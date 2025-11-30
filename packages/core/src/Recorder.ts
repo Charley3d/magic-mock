@@ -1,0 +1,47 @@
+export interface Recorder {
+  record(
+    originalFetch: typeof window.fetch,
+    options: { url: string; data: string | Record<string, unknown> },
+    response?: Response,
+  ): Promise<void>
+}
+
+export class RemoteRecorder implements Recorder {
+  async record(
+    originalFetch: typeof window.fetch,
+    options: { url: string; data: string | Record<string, unknown>; response?: Response },
+  ): Promise<void> {
+    const { url, data, response } = options
+    const status = response?.status
+    const headers = response ? response.headers : []
+
+    const res = await originalFetch('/api/__record', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        response: data,
+        status: status,
+        headers: Object.fromEntries(headers.entries()),
+      }),
+    })
+    if (!res.ok) {
+      throw new Error(`${response?.status} ${response?.statusText}`)
+    } else {
+      console.log('✅ Cached:', url)
+    }
+  }
+}
+
+export class LocalRecorder implements Recorder {
+  async record(
+    _: typeof window.fetch,
+    options: { url: string; data: string | Record<string, unknown>; response?: Response },
+  ): Promise<void> {
+    const { url, data } = options
+
+    localStorage.setItem(url, JSON.stringify({ url, response: data }))
+
+    console.log('✅ Cached with Local Storage:', url)
+  }
+}
