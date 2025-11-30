@@ -19,9 +19,9 @@
       "default": "./dist/client-script.js"
     },
     "./standalone": {
-      "types": "./dist/standalone.d.ts",
-      "import": "./dist/standalone.js",
-      "default": "./dist/standalone.js"
+      "types": "./dist/standalone/client-script.d.ts",
+      "import": "./dist/standalone/client-script.js",
+      "default": "./dist/standalone/client-script.js"
     }
   },
   "files": [
@@ -29,9 +29,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.json && esbuild ./src/client-script.ts --bundle --format=esm --outfile=./dist/client-script.js --define:__STANDALONE__=false && pnpm build:standalone",
-    "build:standalone": "esbuild ./src/client-script.ts --bundle --format=esm --outfile=./dist/standalone.js --define:__STANDALONE__=true && tsc --project ./tsconfig.json --emitDeclarationOnly",
-    "dev": "tsc --watch --project tsconfig.json",
+    "build": "tsdown --minify",
+    "dev": "tsdown --watch",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit"
   },
@@ -40,7 +39,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.18.11",
-    "esbuild": "^0.27.0",
+    "tsdown": "^0.16.6",
     "typescript": "~5.9.0"
   },
   "repository": {
