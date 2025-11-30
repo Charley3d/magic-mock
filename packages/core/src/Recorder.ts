@@ -1,13 +1,13 @@
-export interface Recorder {
-  record(
+export interface Store {
+  set(
     originalFetch: typeof window.fetch,
     options: { url: string; data: string | Record<string, unknown> },
     response?: Response,
   ): Promise<void>
 }
 
-export class RemoteRecorder implements Recorder {
-  async record(
+export class RemoteRecorder implements Store {
+  async set(
     originalFetch: typeof window.fetch,
     options: { url: string; data: string | Record<string, unknown>; response?: Response },
   ): Promise<void> {
@@ -33,8 +33,8 @@ export class RemoteRecorder implements Recorder {
   }
 }
 
-export class LocalRecorder implements Recorder {
-  async record(
+export class LocalRecorder implements Store {
+  async set(
     _: typeof window.fetch,
     options: { url: string; data: string | Record<string, unknown>; response?: Response },
   ): Promise<void> {

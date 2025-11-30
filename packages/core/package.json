@@ -28,8 +28,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.json && build:standalone",
-    "build:standalone": "esbuild ./src/client-script.ts --bundle --format=esm --outfile=./dist/standalone.js && tsc --project ./tsconfig.json --emitDeclarationOnly",
+    "build": "tsc --project tsconfig.json ",
+    "build:standalone": "esbuild ./src/client-script.ts --bundle --format=esm --outfile=./dist/standalone.js --define:__STANDALONE__=true && tsc --project ./tsconfig.json --emitDeclarationOnly",
     "dev": "tsc --watch --project tsconfig.json",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit"

@@ -24,3 +24,5 @@ export interface MagicMockOptions {
    */
   enabled?: boolean
 }
+
+export type RecordingMode = 'recording' | 'mocking' | 'off'
