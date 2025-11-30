@@ -10,11 +10,18 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./client": {
       "types": "./dist/client-script.d.ts",
-      "import": "./dist/client-script.js"
+      "import": "./dist/client-script.js",
+      "default": "./dist/client-script.js"
+    },
+    "./standalone": {
+      "types": "./dist/standalone/client-script.d.ts",
+      "import": "./dist/standalone/client-script.js",
+      "default": "./dist/standalone/client-script.js"
     }
   },
   "files": [
@@ -22,8 +29,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "dev": "tsc --watch --project tsconfig.json",
+    "build": "tsdown --minify",
+    "dev": "tsdown --watch",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit"
   },
@@ -32,6 +39,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.18.11",
+    "tsdown": "^0.16.6",
     "typescript": "~5.9.0"
   },
   "repository": {

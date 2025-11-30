@@ -139,7 +139,7 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
 
       transformIndexHtml() {
         // Read the compiled client script from core package
-        const clientScriptPath = path.resolve(__dirname, '../../core/dist/client-script.js')
+        const clientScriptPath = require.resolve('@magicmock/core/client')
 
         if (!fs.existsSync(clientScriptPath)) {
           console.warn('⚠️ Client script not found. Make sure @magicmock/core is built first.')
@@ -255,7 +255,7 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
             const hooks = (htmlPlugin.constructor as typeof HtmlWebpackPlugin).getHooks(compilation)
 
             hooks.alterAssetTags.tapAsync('magic-mock', (data, cb) => {
-              const clientScriptPath = path.resolve(__dirname, '../../core/dist/client-script.js')
+              const clientScriptPath = require.resolve('@magicmock/core/client')
 
               if (!fs.existsSync(clientScriptPath)) {
                 console.warn('⚠️ Client script NOT found at:', clientScriptPath)

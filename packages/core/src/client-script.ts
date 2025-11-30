@@ -1,71 +1,107 @@
-import { http, HttpResponse, passthrough } from 'msw'
+import { http, passthrough } from 'msw'
 import { setupWorker } from 'msw/browser'
+import { LocalStore, RemoteStore } from './store'
+import { getURL, isApi, isMedia, isMethodAllowed } from './utils'
 
-// Load state from localStorage to persist across page navigations
-let isRecording = localStorage.getItem('msw-recording') === 'true'
-let isMocking = () => localStorage.getItem('msw-mocking') === 'true'
-
+declare const __STANDALONE__: boolean
+const storage = __STANDALONE__ ? new LocalStore() : new RemoteStore()
 const originalFetch = window.fetch
+const isRecording = () => localStorage.getItem('msw-recording') === 'true'
+const isMocking = () => localStorage.getItem('msw-mocking') === 'true'
 
-const worker = setupWorker(
-  http.get(/^(?!.*\/(api\/__)).*$/, async ({ request }) => {
-    const url = request.url
-    // Mock mode: serve from cache if available
-    if (isMocking()) {
-      try {
-        const cacheResponse = await originalFetch('/api/__get-cache?url=' + encodeURIComponent(url))
-        if (cacheResponse.ok) {
-          const cached = await cacheResponse.json()
-          console.log('🔄 Serving from cache:', url)
-          return HttpResponse.json(cached.response, {
-            status: cached.status,
-            headers: cached.headers,
-          })
-        }
-      } catch (e) {
-        console.log('❌ No cache for:', url)
+export function initMagicMock() {
+  // Override fetch for recording
+  overrideFetch()
+  createWorker()
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', createButtons)
+  } else {
+    createButtons()
+  }
+}
+
+function createWorker() {
+  const worker = setupWorker(
+    http.get('*', async ({ request }) => {
+      const url = getURL(request)
+
+      if (url === null || isMedia(url) || isApi(url)) {
+        return passthrough()
       }
+
+      try {
+        // Mock mode: serve from cache if available
+        return await tryGetFromStore(url)
+      } catch (e) {
+        console.log('❌ No cache for:', url.href)
+        console.log('Missing cache reason:', e)
+      }
+      return passthrough()
+    }),
+  )
+
+  // Start worker
+  worker.start({ onUnhandledRequest: 'bypass', quiet: true })
+}
+
+function overrideFetch() {
+  window.fetch = async function (...args: Parameters<typeof fetch>) {
+    const response = await originalFetch(...args)
+    if (!isRecording()) {
+      return response
     }
+    const [input, init] = args
+    const method = init?.method ?? (input instanceof Request ? input.method : 'GET')
+    await tryStoreResponse(input, response, method)
 
-    return passthrough()
-  }),
-)
-
-// Start worker
-worker.start({ onUnhandledRequest: 'bypass', quiet: true })
-
-// Override fetch for recording
-window.fetch = async function (...args: Parameters<typeof fetch>) {
-  const response = await originalFetch(...args)
-  if (!isRecording) {
     return response
   }
-  const [url] = args
+}
 
-  if (typeof url === 'string' && !url.includes('/api/__') && response.ok) {
-    const clone = response.clone()
-    const contentType = response.headers.get('content-type')
-
-    let data: any
-    if (contentType?.includes('application/json')) {
-      data = await clone.json()
-    } else {
-      data = await clone.text()
-    }
-
-    originalFetch('/api/__record', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url,
-        response: data,
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-      }),
-    }).then(() => console.log('✅ Cached:', url))
+async function tryGetFromStore(url: URL) {
+  if (!isMocking()) {
+    throw new Error('Not in mocking mode')
   }
 
-  return response
+  return storage.get(originalFetch, {
+    url: url.href,
+  })
+}
+
+async function tryStoreResponse(url: string | Request | URL, response: Response, method: string) {
+  // Ensure we get a URL object
+  const safeUrl = getURL(url)
+
+  if (
+    safeUrl === null ||
+    isMedia(safeUrl) ||
+    isApi(safeUrl) ||
+    !response.ok ||
+    !isMethodAllowed(method)
+  ) {
+    return
+  }
+
+  const clone = response.clone()
+  const contentType = response.headers.get('content-type')
+
+  let data: string | Record<string, unknown>
+  if (contentType?.includes('application/json')) {
+    data = await clone.json()
+  } else {
+    data = await clone.text()
+  }
+
+  try {
+    storage.set(originalFetch, {
+      url: safeUrl.href,
+      data,
+      response,
+    })
+  } catch (e) {
+    console.error('Error while storing response', e)
+  }
 }
 
 // Create sticky buttons
@@ -75,9 +111,9 @@ function createButtons() {
     'position: fixed; top: 10px; right: 10px; z-index: 99999; display: flex; gap: 10px;'
 
   const recordBtn = document.createElement('button')
-  recordBtn.textContent = isRecording ? '⏹ Recording...' : '⏺ Record'
+  recordBtn.textContent = isRecording() ? '⏹ Recording...' : '⏺ Record'
   recordBtn.style.cssText = `padding: 10px 15px; background: ${
-    isRecording ? '#ff0000' : '#ff4444'
+    isRecording() ? '#ff0000' : '#ff4444'
   }; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);`
 
   const mockBtn = document.createElement('button')
@@ -87,11 +123,11 @@ function createButtons() {
   }; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);`
 
   recordBtn.onclick = () => {
-    isRecording = !isRecording
-    localStorage.setItem('msw-recording', isRecording.toString())
-    recordBtn.style.background = isRecording ? '#ff0000' : '#ff4444'
-    recordBtn.textContent = isRecording ? '⏹ Recording...' : '⏺ Record'
-    console.log('Recording:', isRecording)
+    const newIsRecording = !isRecording()
+    localStorage.setItem('msw-recording', newIsRecording.toString())
+    recordBtn.style.background = isRecording() ? '#ff0000' : '#ff4444'
+    recordBtn.textContent = isRecording() ? '⏹ Recording...' : '⏺ Record'
+    console.log('Recording:', isRecording())
   }
 
   mockBtn.onclick = () => {
@@ -107,10 +143,6 @@ function createButtons() {
   document.body.appendChild(container)
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', createButtons)
-} else {
-  createButtons()
+if (!__STANDALONE__) {
+  initMagicMock()
 }
-
-export type RecordingMode = 'recording' | 'mocking' | 'off'

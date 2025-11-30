@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 
 interface Pokemon {
   name: string
@@ -22,7 +22,9 @@ const fetchPokemon = async () => {
   error.value = null
 
   try {
-    const response = await fetch('https://pokeapi.co/api/v2/pokemon/ditto')
+    const pokemons = ['pikachu', 'ditto']
+    const selectedPokemon = pokemons[Math.round(Math.random())]
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon}`)
     if (!response.ok) throw new Error('Failed to fetch')
     pokemon.value = await response.json()
   } catch (e) {

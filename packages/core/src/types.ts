@@ -24,3 +24,9 @@ export interface MagicMockOptions {
    */
   enabled?: boolean
 }
+
+export type RecordingMode = 'recording' | 'mocking' | 'off'
+export interface LocalRecord {
+  url: string
+  response: string | Record<string, unknown>
+}
