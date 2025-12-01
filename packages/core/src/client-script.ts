@@ -41,66 +41,6 @@ function createWorker() {
       }
       return passthrough()
     }),
-    http.post('*', async ({ request }) => {
-      const url = getURL(request)
-
-      if (url === null || isMedia(url) || isApi(url)) {
-        return passthrough()
-      }
-
-      try {
-        return await tryGetFromStore(url)
-      } catch (e) {
-        console.log('❌ No cache for:', url.href)
-        console.log('Missing cache reason:', e)
-      }
-      return passthrough()
-    }),
-    http.put('*', async ({ request }) => {
-      const url = getURL(request)
-
-      if (url === null || isMedia(url) || isApi(url)) {
-        return passthrough()
-      }
-
-      try {
-        return await tryGetFromStore(url)
-      } catch (e) {
-        console.log('❌ No cache for:', url.href)
-        console.log('Missing cache reason:', e)
-      }
-      return passthrough()
-    }),
-    http.patch('*', async ({ request }) => {
-      const url = getURL(request)
-
-      if (url === null || isMedia(url) || isApi(url)) {
-        return passthrough()
-      }
-
-      try {
-        return await tryGetFromStore(url)
-      } catch (e) {
-        console.log('❌ No cache for:', url.href)
-        console.log('Missing cache reason:', e)
-      }
-      return passthrough()
-    }),
-    http.delete('*', async ({ request }) => {
-      const url = getURL(request)
-
-      if (url === null || isMedia(url) || isApi(url)) {
-        return passthrough()
-      }
-
-      try {
-        return await tryGetFromStore(url)
-      } catch (e) {
-        console.log('❌ No cache for:', url.href)
-        console.log('Missing cache reason:', e)
-      }
-      return passthrough()
-    }),
   )
 
   // Start worker
