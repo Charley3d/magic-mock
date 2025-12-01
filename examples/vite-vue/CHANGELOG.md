@@ -1,5 +1,11 @@
 # vite-vue
 
+## 0.3.0
+
+### Minor Changes
+
+- 16ca013: Add XHR support + add init command to quickly start a standalone project
+
 ## 0.2.0
 
 ### Minor Changes
