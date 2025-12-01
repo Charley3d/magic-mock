@@ -5,6 +5,7 @@
 Magic Mock is a zero-config development tool that records your API responses and replays them instantly. No more waiting for slow backends, broken staging environments, or flaky networks.
 
 [![npm version](https://img.shields.io/npm/v/@magicmock/unplugin.svg)](https://www.npmjs.com/package/@magicmock/unplugin)
+[![npm version](https://img.shields.io/npm/v/@magicmock/core.svg)](https://www.npmjs.com/package/@magicmock/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ⚠️ Work in Progress
@@ -16,18 +17,29 @@ This project is under active development. APIs may change and some features are 
 | Bundler   | Status | Notes                                               |
 | --------- | ------ | --------------------------------------------------- |
 | Vite      | ✅     | Fully supported                                     |
-| Webpack 5 | ✅     | Supported with manual middleware config for Vue CLI |
+| Webpack 5 | 🚧     | Work in progress                                    |
+| Vue CLI   | 🚧     | Work in progress                                    |
 | Rollup    | 🚧     | Planned                                             |
 | esbuild   | ❌     | Not applicable (no dev server)                      |
 
 ## Features
 
-- 🎯 **Zero Configuration** - Works out of the box with Vite
+- 🎯 **Zero Configuration** - Works out of the box with Vite or standalone
 - 🚀 **Instant Responses** - Serve cached API responses at lightning speed
 - 🎨 **Visual Controls** - Toggle recording/mocking with sticky UI buttons
-- 💾 **Persistent Cache** - Responses saved to filesystem, shareable with your team
+- 💾 **Persistent Cache** - Responses saved to filesystem (plugin) or memory (standalone)
 - 🔄 **Hot Reload Friendly** - State persists across page reloads
-- 🌐 **Universal** - Works with fetch, axios, and any HTTP library
+- 🌐 **Universal** - Works with fetch, XHR, axios, jQuery, and any HTTP library
+- 📦 **Flexible Deployment** - Use as bundler plugin or standalone script
+
+## Examples
+
+See working demonstrations in the [examples](./examples/) directory:
+
+- **[Vite + Vue](./examples/vite-vue/)** - Modern Vue 3 application with Vite bundler and filesystem caching
+- **[jQuery](./examples/simple-jquery/)** - Standalone XHR support with jQuery (no bundler)
+- **[Axios](./examples/simple-axios/)** - Standalone XHR support with Axios (no bundler)
+- **[Vue CLI](./examples/cli-vue/)** - Vue CLI project with Webpack configuration
 
 ## Quick Start
 
@@ -159,6 +171,71 @@ module.exports = defineConfig({
 
 _Coming soon! Stay tuned for updates._
 
+## Standalone Usage (No Bundler)
+
+Magic Mock can be used directly in any HTML page without a bundler, making it perfect for quick prototypes, legacy applications, or simple projects.
+
+### Quick Setup
+
+Initialize Magic Mock in your project directory:
+
+```bash
+# Basic usage - copies files to current directory
+npx @magicmock/core init
+
+# Specify a custom directory (e.g., ./public)
+npx @magicmock/core init ./public
+
+# With --save flag to add to package.json scripts
+npx @magicmock/core init ./ --save
+```
+
+This command will:
+- Copy the Magic Mock client script to your directory
+- Copy the MSW service worker file
+- Automatically run MSW initialization
+
+### Usage in HTML
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My App</title>
+  </head>
+  <body>
+    <h1>Hello World</h1>
+
+    <!-- Load Magic Mock client before your app code -->
+    <script src="/client-script.js"></script>
+    <script src="/main.js"></script>
+  </body>
+</html>
+```
+
+### Standalone vs Plugin
+
+| Feature             | Standalone (`@magicmock/core`) | Plugin (`@magicmock/unplugin`) |
+| ------------------- | ------------------------------ | ------------------------------ |
+| XHR Support         | ✅                             | ✅                             |
+| Fetch Support       | ✅                             | ✅                             |
+| In-memory Caching   | ✅                             | ✅                             |
+| Filesystem Caching  | ❌                             | ✅                             |
+| Git-shareable Mocks | ❌                             | ✅                             |
+| Bundler Required    | ❌                             | ✅                             |
+| Setup Complexity    | Simple                         | Medium                         |
+
+**When to use standalone:**
+- Quick prototypes and simple HTML pages
+- Legacy applications using jQuery or vanilla JavaScript
+- Testing compatibility with XHR-based libraries (Axios, jQuery)
+- Projects without a build system
+
+**When to use plugin:**
+- Modern applications with Vite or Webpack
+- Team collaboration requiring git-shareable mocks
+- Projects needing persistent filesystem caching
+
 ## Usage
 
 1. **Start your dev server** - Two buttons appear in the top-right corner
@@ -216,9 +293,11 @@ interface MagicMockOptions {
 
 - 🚀 **Faster Development** - Work offline or with slow APIs
 - 🧪 **Consistent Testing** - Same responses every time
-- 👥 **Team Collaboration** - Share cached responses via git
+- 👥 **Team Collaboration** - Share cached responses via git (plugin mode)
 - 🏖️ **Demo Mode** - Present without internet/backend access
 - 🐛 **Bug Reproduction** - Capture and replay problematic responses
+- 🔧 **Quick Prototyping** - Add to any HTML page with one npx command
+- 🏛️ **Legacy Apps** - Works with jQuery, Axios, and XHR-based libraries
 
 ## Comparison
 
@@ -233,15 +312,15 @@ interface MagicMockOptions {
 
 ## Known Limitations
 
-- Vue CLI requires manual middleware configuration (see setup above)
-- Rollup support coming soon
-- XHR (XMLHttpRequest) not yet supported - fetch API only
+- Webpack 5 support is work in progress
+- Vue CLI support is work in progress
+- Rollup support is planned
 
 ## Roadmap
 
+- [ ] Complete Webpack 5 support
+- [ ] Complete Vue CLI integration
 - [ ] Rollup plugin implementation
-- [ ] XHR support
-- [ ] Improved Vue CLI integration
 - [ ] UI for cache management
 - [ ] Configuration options for excluded URLs
 

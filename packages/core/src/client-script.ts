@@ -6,12 +6,14 @@ import { getURL, isApi, isMedia, isMethodAllowed } from './utils'
 declare const __STANDALONE__: boolean
 const storage = __STANDALONE__ ? new LocalStore() : new RemoteStore()
 const originalFetch = window.fetch
+const originalXMLHttpRequest = window.XMLHttpRequest
 const isRecording = () => localStorage.getItem('msw-recording') === 'true'
 const isMocking = () => localStorage.getItem('msw-mocking') === 'true'
 
 export function initMagicMock() {
-  // Override fetch for recording
+  // Override fetch and XHR for recording
   overrideFetch()
+  overrideXHR()
   createWorker()
 
   if (document.readyState === 'loading') {
@@ -30,14 +32,20 @@ function createWorker() {
         return passthrough()
       }
 
+      if (!isMocking()) {
+        return passthrough()
+      }
+
       try {
         // Mock mode: serve from cache if available
         return await tryGetFromStore(url)
-      } catch (e) {
+      } catch (e: unknown) {
         console.log('❌ No cache for:', url.href)
-        console.log('Missing cache reason:', e)
+        if (e instanceof Error) {
+          console.log('Missing cache reason:', e.message)
+        }
+        return passthrough()
       }
-      return passthrough()
     }),
   )
 
@@ -59,11 +67,53 @@ function overrideFetch() {
   }
 }
 
-async function tryGetFromStore(url: URL) {
-  if (!isMocking()) {
-    throw new Error('Not in mocking mode')
+function overrideXHR() {
+  // Store original methods
+  const originalOpen = originalXMLHttpRequest.prototype.open
+  const originalSend = originalXMLHttpRequest.prototype.send
+
+  // Override open to capture method and URL
+  originalXMLHttpRequest.prototype.open = function (
+    method: string,
+    url: string | URL,
+    async: boolean = true,
+    user?: string | null,
+    password?: string | null,
+  ) {
+    // Store method and URL on the instance for later use in send
+    ;(this as any)._method = method
+    ;(this as any)._url = url
+    return originalOpen.call(this, method, url, async, user, password)
   }
 
+  // Override send to intercept and record responses
+  originalXMLHttpRequest.prototype.send = function (
+    body?: Document | XMLHttpRequestBodyInit | null,
+  ) {
+    const xhr = this
+    const method = (xhr as any)._method
+    const url = (xhr as any)._url
+
+    // Store original onreadystatechange
+    const originalOnReadyStateChange = xhr.onreadystatechange
+
+    xhr.onreadystatechange = function () {
+      // Call original handler first
+      if (originalOnReadyStateChange) {
+        originalOnReadyStateChange.call(xhr, new Event('readystatechange'))
+      }
+
+      // Record response when request is complete
+      if (xhr.readyState === 4 && isRecording() && xhr.status >= 200 && xhr.status < 300) {
+        tryStoreXHRResponse(url, xhr, method)
+      }
+    }
+
+    return originalSend.call(this, body)
+  }
+}
+
+async function tryGetFromStore(url: URL) {
   return storage.get(originalFetch, {
     url: url.href,
   })
@@ -101,6 +151,57 @@ async function tryStoreResponse(url: string | Request | URL, response: Response,
     })
   } catch (e) {
     console.error('Error while storing response', e)
+  }
+}
+
+async function tryStoreXHRResponse(url: string | URL, xhr: XMLHttpRequest, method: string) {
+  // Ensure we get a URL object
+  const safeUrl = getURL(url)
+
+  if (safeUrl === null || isMedia(safeUrl) || isApi(safeUrl) || !isMethodAllowed(method)) {
+    return
+  }
+
+  const contentType = xhr.getResponseHeader('content-type')
+
+  let data: string | Record<string, unknown>
+  if (contentType?.includes('application/json')) {
+    try {
+      data = JSON.parse(xhr.responseText)
+    } catch {
+      data = xhr.responseText
+    }
+  } else {
+    data = xhr.responseText
+  }
+
+  const headers = new Headers()
+  // Copy response headers
+  const responseHeaders = xhr.getAllResponseHeaders()
+  if (responseHeaders) {
+    responseHeaders.split('\r\n').forEach((header) => {
+      const [key, value] = header.split(': ')
+      if (key && value) {
+        headers.set(key, value)
+      }
+    })
+  }
+
+  // Create a mock Response object for storage compatibility
+  const mockResponse = new Response(xhr.responseText, {
+    status: xhr.status,
+    statusText: xhr.statusText,
+    headers,
+  })
+
+  try {
+    storage.set(originalFetch, {
+      url: safeUrl.href,
+      data,
+      response: mockResponse,
+    })
+  } catch (e) {
+    console.error('Error while storing XHR response', e)
   }
 }
 

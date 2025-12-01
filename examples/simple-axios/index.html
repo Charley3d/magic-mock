@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Magic Mock - Axios Example</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        text-align: center;
+      }
+      button {
+        background-color: #0066cc;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 20px;
+      }
+      button:hover {
+        background-color: #0052a3;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        text-align: left;
+      }
+      .rtt {
+        font-weight: bold;
+        color: #0066cc;
+        margin-bottom: 10px;
+      }
+      .events {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .event {
+        margin: 10px 0;
+        padding: 10px;
+        border-left: 3px solid #0066cc;
+        background-color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Magic Mock - Axios XHR Example</h1>
+    <p>Click the button below to fetch React repository events from GitHub API using Axios XHR</p>
+
+    <button id="fetchButton">Fetch GitHub Events</button>
+
+    <div id="result" class="result" style="display: none">
+      <div id="rtt" class="rtt"></div>
+      <div id="events" class="events"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

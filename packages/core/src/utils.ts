@@ -23,9 +23,9 @@ export const isApi = (url: URL) => {
 
 export const getURL = (input: string | URL | Request): URL | null => {
   try {
-    if (typeof input === 'string') return new URL(input)
+    if (typeof input === 'string') return new URL(input, location.href)
     if (input instanceof URL) return input
-    if (input instanceof Request) return new URL(input.url)
+    if (input instanceof Request) return new URL(input.url, location.href)
     return null
   } catch {
     return null

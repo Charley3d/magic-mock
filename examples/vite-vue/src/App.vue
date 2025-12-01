@@ -25,6 +25,7 @@ const fetchPokemon = async () => {
     const pokemons = ['pikachu', 'ditto']
     const selectedPokemon = pokemons[Math.round(Math.random())]
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon}`)
+
     if (!response.ok) throw new Error('Failed to fetch')
     pokemon.value = await response.json()
   } catch (e) {
