@@ -40,6 +40,7 @@ simple-jquery/
    ```
 
 2. Initialize Magic Mock (if not already done):
+
    ```bash
    # Basic usage (standalone, no package.json modification)
    npx @magicmock/core init
@@ -47,6 +48,7 @@ simple-jquery/
    # If you use MSW directly and want auto-updates
    npx @magicmock/core init ./public --save
    ```
+
    This copies the necessary client scripts and service worker to the specified directory (or current directory), and automatically runs MSW initialization.
 
 ### Running the Example

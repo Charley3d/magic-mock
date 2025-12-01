@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import $ from 'jquery'
 import { onMounted, ref } from 'vue'
 
 interface Pokemon {
@@ -23,18 +22,12 @@ const fetchPokemon = async () => {
   error.value = null
 
   try {
-    //TODO: Create dedicated examples for jQuery/axios
     const pokemons = ['pikachu', 'ditto']
     const selectedPokemon = pokemons[Math.round(Math.random())]
-    // const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon}`)
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon}`)
 
-    const response = await $.ajax({
-      url: `https://pokeapi.co/api/v2/pokemon/${selectedPokemon}`,
-      method: 'GET',
-    })
-    // if (('ok' in response && !response.ok) || false) throw new Error('Failed to fetch')
-    // pokemon.value = await response.json()
-    pokemon.value = response
+    if (!response.ok) throw new Error('Failed to fetch')
+    pokemon.value = await response.json()
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Unknown error'
   } finally {
