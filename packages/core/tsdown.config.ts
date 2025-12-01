@@ -36,4 +36,13 @@ export default defineConfig([
       __STANDALONE__: 'true',
     },
   },
+  // CLI
+  {
+    entry: 'bin/cli.ts',
+    format: ['esm'],
+    outDir: 'dist',
+    banner: '#!/usr/bin/env node',
+    outExtensions: () => ({ js: '.js' }),
+    noExternal: [/.*/],
+  },
 ])
