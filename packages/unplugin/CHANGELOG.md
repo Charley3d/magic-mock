@@ -1,5 +1,12 @@
 # @magicmock/unplugin
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [16ca013]
+  - @magicmock/core@0.4.0
+
 ## 0.4.0
 
 ### Minor Changes
