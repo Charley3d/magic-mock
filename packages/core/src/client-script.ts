@@ -32,14 +32,20 @@ function createWorker() {
         return passthrough()
       }
 
+      if (!isMocking()) {
+        return passthrough()
+      }
+
       try {
         // Mock mode: serve from cache if available
         return await tryGetFromStore(url)
-      } catch (e) {
+      } catch (e: unknown) {
         console.log('❌ No cache for:', url.href)
-        console.log('Missing cache reason:', e)
+        if (e instanceof Error) {
+          console.log('Missing cache reason:', e.message)
+        }
+        return passthrough()
       }
-      return passthrough()
     }),
   )
 
@@ -65,8 +71,6 @@ function overrideXHR() {
   // Store original methods
   const originalOpen = originalXMLHttpRequest.prototype.open
   const originalSend = originalXMLHttpRequest.prototype.send
-
-  XMLHttpRequest.prototype.open
 
   // Override open to capture method and URL
   originalXMLHttpRequest.prototype.open = function (
@@ -96,7 +100,7 @@ function overrideXHR() {
     xhr.onreadystatechange = function () {
       // Call original handler first
       if (originalOnReadyStateChange) {
-        originalOnReadyStateChange.call(xhr, new Event('xhr'))
+        originalOnReadyStateChange.call(xhr, new Event('readystatechange'))
       }
 
       // Record response when request is complete
@@ -110,10 +114,6 @@ function overrideXHR() {
 }
 
 async function tryGetFromStore(url: URL) {
-  if (!isMocking()) {
-    throw new Error('Not in mocking mode')
-  }
-
   return storage.get(originalFetch, {
     url: url.href,
   })
@@ -175,23 +175,24 @@ async function tryStoreXHRResponse(url: string | URL, xhr: XMLHttpRequest, metho
     data = xhr.responseText
   }
 
-  // Create a mock Response object for storage compatibility
-  const mockResponse = new Response(xhr.responseText, {
-    status: xhr.status,
-    statusText: xhr.statusText,
-    headers: new Headers(),
-  })
-
+  const headers = new Headers()
   // Copy response headers
   const responseHeaders = xhr.getAllResponseHeaders()
   if (responseHeaders) {
     responseHeaders.split('\r\n').forEach((header) => {
       const [key, value] = header.split(': ')
       if (key && value) {
-        mockResponse.headers.set(key, value)
+        headers.set(key, value)
       }
     })
   }
+
+  // Create a mock Response object for storage compatibility
+  const mockResponse = new Response(xhr.responseText, {
+    status: xhr.status,
+    statusText: xhr.statusText,
+    headers,
+  })
 
   try {
     storage.set(originalFetch, {
