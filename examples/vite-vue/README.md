@@ -90,10 +90,10 @@ Then open your browser to the URL shown (typically `http://localhost:5173`)
 
 The `@magicmock/unplugin` package provides a Vite plugin that:
 
-1. **Bundles MSW** (Mock Service Worker) during build
-2. **Sets up dev server middleware** for recording (`/api/__record`) and cache retrieval (`/api/__get-cache`)
-3. **Injects client script** and import maps into `index.html`
-4. **Creates `.request-cache/` directory** for storing recorded requests as JSON files
+1. **Sets up dev server middleware** for recording (`/api/__record`) and cache retrieval (`/api/__get-cache`)
+2. **Injects client script** into `index.html`
+3. **Creates `.request-cache/` directory** for storing recorded requests as JSON files
+4. **Intercepts fetch and XHR** calls for recording and mocking
 
 ### Filesystem vs In-Memory Caching
 
@@ -220,4 +220,5 @@ This makes the plugin suitable for:
 - [Main README](../../README.md): Full Magic Mock documentation
 - [Vite Configuration Reference](https://vite.dev/config/): Vite config options
 - [Vue 3 Documentation](https://vuejs.org/): Learn about Vue 3
-- [MSW Documentation](https://mswjs.io/): Understanding Mock Service Worker
+- [Fetch API Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API): Understanding fetch interception
+- [XMLHttpRequest Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest): Understanding XHR interception

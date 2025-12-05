@@ -77,10 +77,11 @@ interface MagicMockOptions {
 
 ## How It Works
 
-1. Copies MSW (Mock Service Worker) to your public directory
-2. Injects client script into your HTML
-3. Sets up dev server endpoints for caching (`/api/__record`, `/api/__get-cache`)
+1. Injects client script into your HTML
+2. Sets up dev server endpoints for caching (`/api/__record`, `/api/__get-cache`)
+3. Intercepts fetch and XMLHttpRequest calls for recording and mocking
 4. Provides UI controls for toggling record/mock modes
+5. Supports GET, POST, PUT, DELETE methods with request body recording
 
 ## License
 
