@@ -34,9 +34,7 @@
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
-    "msw": "^2.12.3"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.18.11",
     "tsdown": "^0.16.6",
@@ -53,12 +51,13 @@
   "homepage": "https://github.com/charley3d/magic-mock/tree/main/packages/core#readme",
   "keywords": [
     "mock",
-    "msw",
     "http",
     "request",
     "recording",
     "replay",
-    "cache"
+    "cache",
+    "fetch",
+    "xhr"
   ],
   "publishConfig": {
     "access": "public"

@@ -192,8 +192,7 @@ npx @magicmock/core init ./ --save
 
 This command will:
 - Copy the Magic Mock client script to your directory
-- Copy the MSW service worker file
-- Automatically run MSW initialization
+- Set up request recording and mocking capabilities
 
 ### Usage in HTML
 
@@ -258,9 +257,16 @@ This command will:
 
 ## How It Works
 
-1. **Recording Mode**: Intercepts HTTP requests, stores responses in `.request-cache/`
-2. **Mocking Mode**: Returns cached responses instantly via MSW (Mock Service Worker)
+1. **Recording Mode**: Intercepts HTTP requests (fetch & XHR), stores responses in `.request-cache/`
+2. **Mocking Mode**: Returns cached responses instantly by intercepting fetch/XHR calls
 3. **Off Mode**: Normal behavior, requests pass through
+
+Magic Mock uses native fetch and XMLHttpRequest overrides to intercept network requests, providing:
+- Support for GET, POST, PUT, DELETE methods
+- Request body recording and replay
+- FormData handling with file metadata
+- Configurable size limits for caching
+- Simulated upload delays for realistic mocking
 
 All state persists in localStorage across page reloads.
 
@@ -301,14 +307,16 @@ interface MagicMockOptions {
 
 ## Comparison
 
-| Feature        | Magic Mock | Polly.js | MSW manually | Mirage.js |
-| -------------- | ---------- | -------- | ------------ | --------- |
-| Zero Config    | ✅         | ❌       | ❌           | ❌        |
-| Visual UI      | ✅         | ❌       | ❌           | ❌        |
-| Vite Plugin    | ✅         | ❌       | ❌           | ❌        |
-| Webpack Plugin | ✅         | ❌       | ❌           | ❌        |
-| Auto Recording | ✅         | ✅       | ❌           | ❌        |
-| File Storage   | ✅         | ✅       | Manual       | Manual    |
+| Feature        | Magic Mock | Polly.js | Mirage.js |
+| -------------- | ---------- | -------- | --------- |
+| Zero Config    | ✅         | ❌       | ❌        |
+| Visual UI      | ✅         | ❌       | ❌        |
+| Vite Plugin    | ✅         | ❌       | ❌        |
+| Webpack Plugin | ✅         | ❌       | ❌        |
+| Auto Recording | ✅         | ✅       | ❌        |
+| File Storage   | ✅         | ✅       | Manual    |
+| POST/PUT/DELETE| ✅         | ✅       | ✅        |
+| FormData Support| ✅        | ✅       | ❌        |
 
 ## Known Limitations
 
@@ -351,5 +359,5 @@ MIT © [Charley](https://github.com/charley3d)
 
 Built with:
 
-- [MSW](https://mswjs.io/) - Mock Service Worker
 - [unplugin](https://github.com/unjs/unplugin) - Universal plugin system
+- Native fetch and XMLHttpRequest APIs for request interception

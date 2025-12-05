@@ -25,7 +25,6 @@ simple-axios/
 ├── main.js              # Application logic using axios.get()
 ├── package.json         # Dependencies (@magicmock/core)
 ├── client-script.js     # Magic Mock client (from @magicmock/core)
-├── mockServiceWorker.js # MSW worker (from @magicmock/core)
 └── README.md           # This file
 ```
 
@@ -45,11 +44,11 @@ simple-axios/
    # Basic usage (standalone, no package.json modification)
    npx @magicmock/core init
 
-   # If you use MSW directly and want auto-updates
+   # With --save flag to add to package.json scripts
    npx @magicmock/core init ./ --save
    ```
 
-   This copies the necessary client scripts and service worker to the specified directory (or current directory), and automatically runs MSW initialization.
+   This copies the necessary client scripts to the specified directory (or current directory) for request recording and mocking.
 
 ### Running the Example
 
@@ -150,25 +149,25 @@ This makes Magic Mock suitable for:
 ## Dependencies
 
 - **Axios 1.6.0**: Loaded from CDN for promise-based XHR requests
-- **@magicmock/core**: Provides Magic Mock client and MSW integration
+- **@magicmock/core**: Provides Magic Mock client with fetch/XHR interception
 
 ## Troubleshooting
 
 ### Buttons Don't Appear
 
-Make sure the page is served over HTTP (not `file://`). Service workers require HTTP/HTTPS to function.
+Make sure the page is served over HTTP (not `file://`).
 
 ### Requests Not Being Cached
 
 1. Check browser console for errors
-2. Verify the service worker is registered (Chrome DevTools → Application → Service Workers)
-3. Ensure recording mode is enabled before making requests
+2. Ensure recording mode is enabled before making requests
+3. Verify fetch/XHR interception is working
 
 ### Mock Mode Not Working
 
 1. Make sure you've recorded at least one request first
 2. Verify the exact URL matches (including query parameters)
-3. Check browser DevTools → Application → Cache Storage for the MSW cache
+3. Check browser DevTools → Application → Local Storage for the cached requests
 4. Note: This standalone version uses in-memory caching only (no `.request-cache/` directory)
 
 ## Related Examples

@@ -1,4 +1,3 @@
-import { build } from 'esbuild'
 import fs from 'fs'
 import type HtmlWebpackPlugin from 'html-webpack-plugin'
 import { createRequire } from 'node:module'
@@ -29,8 +28,6 @@ export interface MagicMockOptions {
 
 const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options = {}) => {
   const cacheDir = path.join(process.cwd(), options.cacheDir || '.request-cache')
-  const publicDir = path.join(process.cwd(), 'public')
-  const mswLibDir = path.join(publicDir, '__msw')
 
   return {
     name: 'magic-mock',
@@ -38,50 +35,11 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
     // Vite-specific hooks
     vite: {
       async buildStart() {
-        // Copy MSW browser bundle
-        if (!fs.existsSync(mswLibDir)) {
-          fs.mkdirSync(mswLibDir, { recursive: true })
+        // Ensure cache directory exists
+        if (!fs.existsSync(cacheDir)) {
+          fs.mkdirSync(cacheDir, { recursive: true })
         }
-
-        const unifiedEntry = path.join(__dirname, '_unified-entry.js')
-        fs.writeFileSync(
-          unifiedEntry,
-          `
-          export { http, HttpResponse, passthrough } from 'msw'
-          export { setupWorker } from 'msw/browser'
-        `,
-        )
-
-        try {
-          await build({
-            entryPoints: [unifiedEntry],
-            bundle: true,
-            format: 'esm',
-            outfile: path.join(mswLibDir, 'msw-bundle.js'),
-            platform: 'browser',
-            target: 'es2020',
-            minify: false,
-            sourcemap: true,
-          })
-          fs.unlinkSync(unifiedEntry)
-
-          console.log('✅ MSW bundled to public/__msw/msw-bundle.js')
-
-          const mswServiceWorkerSource = require.resolve('msw/mockServiceWorker.js')
-          const mswServiceWorkerDest = path.join(publicDir, 'mockServiceWorker.js')
-
-          if (fs.existsSync(mswServiceWorkerSource)) {
-            fs.copyFileSync(mswServiceWorkerSource, mswServiceWorkerDest)
-            console.log('✅ MSW Service Worker copied to public/')
-          } else {
-            console.warn('⚠️ MSW Service Worker not found. Install msw: npm install msw')
-          }
-        } catch (error) {
-          console.error('❌ Failed to bundle MSW:', error)
-          if (fs.existsSync(unifiedEntry)) {
-            fs.unlinkSync(unifiedEntry)
-          }
-        }
+        console.log('✅ Magic Mock initialized - cache dir:', cacheDir)
       },
 
       configureServer(server: ViteDevServer) {
@@ -96,13 +54,16 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
             let body = ''
             req.on('data', (chunk) => (body += chunk))
             req.on('end', () => {
-              const { url, response, status, headers } = JSON.parse(body)
-              const filename = Buffer.from(url).toString('base64').replace(/[/+=]/g, '_') + '.json'
+              const { url, method, body: requestBody, response, status, headers } = JSON.parse(body)
+
+              // Generate filename based on method + URL + body
+              const cacheKey = `${method}:${url}${requestBody ? ':' + requestBody : ''}`
+              const filename = Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
               const filepath = path.join(cacheDir, filename)
 
               fs.writeFileSync(
                 filepath,
-                JSON.stringify({ url, response, status, headers }, null, 2),
+                JSON.stringify({ url, method, body: requestBody, response, status, headers }, null, 2),
               )
               res.writeHead(200, { 'Content-Type': 'application/json' })
               res.end(JSON.stringify({ success: true }))
@@ -113,16 +74,20 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
         // Endpoint to get cached requests
         server.middlewares.use('/api/__get-cache', (req, res) => {
           if (req.method === 'GET') {
-            const url = req.url?.split('?url=')[1]
-            if (!url) {
+            const urlObj = new URL(req.url || '', `http://${req.headers.host}`)
+            const url = urlObj.searchParams.get('url')
+            const method = urlObj.searchParams.get('method')
+            const body = urlObj.searchParams.get('body')
+
+            if (!url || !method) {
               res.writeHead(400)
-              res.end()
+              res.end(JSON.stringify({ error: 'Missing url or method parameter' }))
               return
             }
 
-            const decodedUrl = decodeURIComponent(url)
-            const filename =
-              Buffer.from(decodedUrl).toString('base64').replace(/[/+=]/g, '_') + '.json'
+            // Generate filename based on method + URL + body (same as recording)
+            const cacheKey = `${method}:${url}${body ? ':' + body : ''}`
+            const filename = Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
             const filepath = path.join(cacheDir, filename)
 
             if (fs.existsSync(filepath)) {
@@ -152,17 +117,6 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
         return [
           {
             tag: 'script',
-            attrs: { type: 'importmap' },
-            children: JSON.stringify({
-              imports: {
-                'msw/browser': '/__msw/msw-bundle.js',
-                msw: '/__msw/msw-bundle.js',
-              },
-            }),
-            injectTo: 'head-prepend',
-          },
-          {
-            tag: 'script',
             attrs: { type: 'module' },
             children: clientScript,
             injectTo: 'head-prepend',
@@ -175,68 +129,13 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
     webpack(compiler) {
       console.log('🚀 Magic Mock Webpack plugin loaded!')
 
-      const setupMSW = async () => {
-        console.log('📦 Setting up MSW...')
-        const corePath = path.join(__dirname, '../../core')
-        const publicDir = path.join(compiler.options.context || process.cwd(), 'public')
-        const mswLibDir = path.join(publicDir, '__msw')
-
-        if (!fs.existsSync(mswLibDir)) {
-          fs.mkdirSync(mswLibDir, { recursive: true })
+      // Ensure cache directory exists
+      compiler.hooks.beforeRun.tapAsync('magic-mock', (compilation, callback) => {
+        if (!fs.existsSync(cacheDir)) {
+          fs.mkdirSync(cacheDir, { recursive: true })
         }
-
-        // Copy Service Worker
-        const mswServiceWorkerSource = path.join(
-          corePath,
-          'node_modules/msw/lib/mockServiceWorker.js',
-        )
-        const mswServiceWorkerDest = path.join(publicDir, 'mockServiceWorker.js')
-
-        if (fs.existsSync(mswServiceWorkerSource)) {
-          fs.copyFileSync(mswServiceWorkerSource, mswServiceWorkerDest)
-          console.log('✅ MSW Service Worker copied to public/')
-        }
-
-        // Bundle MSW
-        const unifiedEntry = path.join(corePath, '_unified-entry.js')
-        fs.writeFileSync(
-          unifiedEntry,
-          `
-      export * from 'msw'
-      export * from 'msw/browser'
-    `,
-        )
-
-        try {
-          await build({
-            entryPoints: [unifiedEntry],
-            bundle: true,
-            format: 'esm',
-            outfile: path.join(mswLibDir, 'msw-bundle.js'),
-            platform: 'browser',
-            target: 'es2020',
-            minify: false,
-            sourcemap: true,
-          })
-          fs.unlinkSync(unifiedEntry)
-          console.log('✅ MSW bundled for Webpack')
-        } catch (error) {
-          console.error('❌ Failed to bundle MSW:', error)
-          if (fs.existsSync(unifiedEntry)) {
-            fs.unlinkSync(unifiedEntry)
-          }
-        }
-        console.log('✅ MSW setup complete')
-      }
-
-      compiler.hooks.beforeRun.tapPromise('magic-mock', async () => {
-        console.log('🔥 beforeRun hook triggered')
-        await setupMSW()
-      })
-
-      compiler.hooks.watchRun.tapPromise('magic-mock', async () => {
-        console.log('👀 watchRun hook triggered')
-        await setupMSW()
+        console.log('✅ Magic Mock initialized - cache dir:', cacheDir)
+        callback()
       })
       // Inject script into HTML
       try {
@@ -265,27 +164,13 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
               const clientScript = fs.readFileSync(clientScriptPath, 'utf-8')
 
               if (data.assetTags) {
-                data.assetTags.scripts.push(
-                  {
-                    tagName: 'script',
-                    voidTag: false,
-                    attributes: { type: 'importmap' },
-                    innerHTML: JSON.stringify({
-                      imports: {
-                        'msw/browser': '/__msw/msw-bundle.js',
-                        msw: '/__msw/msw-bundle.js',
-                      },
-                    }),
-                    meta: {},
-                  },
-                  {
-                    tagName: 'script',
-                    voidTag: false,
-                    attributes: { type: 'module' },
-                    innerHTML: clientScript,
-                    meta: {},
-                  },
-                )
+                data.assetTags.scripts.push({
+                  tagName: 'script',
+                  voidTag: false,
+                  attributes: { type: 'module' },
+                  innerHTML: clientScript,
+                  meta: {},
+                })
               }
 
               console.log('✅ Scripts injected!')

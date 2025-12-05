@@ -25,7 +25,6 @@ simple-jquery/
 ├── main.js              # Application logic using $.ajax()
 ├── package.json         # Dependencies (@magicmock/core)
 ├── client-script.js     # Magic Mock client (from @magicmock/core)
-├── mockServiceWorker.js # MSW worker (from @magicmock/core)
 └── README.md           # This file
 ```
 
@@ -45,11 +44,11 @@ simple-jquery/
    # Basic usage (standalone, no package.json modification)
    npx @magicmock/core init
 
-   # If you use MSW directly and want auto-updates
+   # With --save flag to add to package.json scripts
    npx @magicmock/core init ./public --save
    ```
 
-   This copies the necessary client scripts and service worker to the specified directory (or current directory), and automatically runs MSW initialization.
+   This copies the necessary client scripts to the specified directory (or current directory) for request recording and mocking.
 
 ### Running the Example
 
@@ -152,7 +151,7 @@ This makes Magic Mock suitable for:
 ## Dependencies
 
 - **jQuery 3.6.0**: Loaded from CDN for XHR-based requests
-- **@magicmock/core**: Provides Magic Mock client and MSW integration
+- **@magicmock/core**: Provides Magic Mock client with fetch/XHR interception
 
 ## Troubleshooting
 
@@ -170,7 +169,7 @@ Make sure the page is served over HTTP (not `file://`). Service workers require 
 
 1. Make sure you've recorded at least one request first
 2. Verify the exact URL matches (including query parameters)
-3. Check browser DevTools → Application → Cache Storage for the MSW cache
+3. Check browser DevTools → Application → Local Storage for the cached requests
 4. Note: This standalone version uses in-memory caching only (no `.request-cache/` directory)
 
 ## Related Examples

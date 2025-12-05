@@ -54,16 +54,6 @@ function main() {
     }
   }
 
-  const mswCommand = `npx msw init ${publicDir}${saveFlag ? ' --save' : ' --no-save'}`
-  console.log(`\n→ Running: ${mswCommand}\n`)
-
-  try {
-    execSync(mswCommand, { stdio: 'inherit' })
-  } catch (error) {
-    console.error(red('Failed to run msw init'))
-    process.exit(1)
-  }
-
   console.log(green('\n✓ Magic Mock initialized successfully!'))
 }
 
