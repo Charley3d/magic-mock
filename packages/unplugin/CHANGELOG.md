@@ -1,5 +1,16 @@
 # @magicmock/unplugin
 
+## 0.5.0
+
+### Minor Changes
+
+- fb1b0ae: Add POST,PUT,DELETE methods, remove msw to have a lighter module.
+
+### Patch Changes
+
+- Updated dependencies [fb1b0ae]
+  - @magicmock/core@0.5.0
+
 ## 0.4.1
 
 ### Patch Changes
