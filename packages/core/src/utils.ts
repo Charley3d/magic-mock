@@ -1,3 +1,5 @@
+import { StoredMedia } from './types'
+
 /**
  * Encode URL to safe filename
  */
@@ -41,17 +43,17 @@ export const isMethodAllowed = (method: string) => {
  * Generate cache key from method, URL, and optional body
  */
 export const generateCacheKey = (method: string, url: string, body?: string): string => {
-  return `${method.toUpperCase()}:${url}${body ? ':' + body : ''}`
+  return `${method.toUpperCase()}::${url}::${body || ''}`
 }
 
 /**
  * Serialize FormData to JSON with file metadata
  */
 export const serializeFormData = (formData: FormData): string => {
-  const serialized: Record<string, any> = {}
+  const serialized: Record<string, unknown | StoredMedia> = {}
   for (const [key, value] of formData.entries()) {
     if (typeof value !== 'string') {
-      serialized[key] = {
+      ;(serialized[key] as StoredMedia) = {
         _file: true,
         name: value.name || 'blob',
         size: value.size,
@@ -75,14 +77,24 @@ export const calculateFileDelay = (body: string, uploadSpeed: number = 1048576):
     const parsed = JSON.parse(body)
     let totalSize = 0
 
+    // Type guard for StoredMedia
+    const isStoredMedia = (obj: unknown): obj is StoredMedia => {
+      return (
+        typeof obj === 'object' &&
+        obj !== null &&
+        '_file' in obj &&
+        obj._file === true &&
+        'size' in obj &&
+        typeof obj.size === 'number'
+      )
+    }
+
     // Find all file metadata objects and sum their sizes
-    const findFiles = (obj: any) => {
-      if (typeof obj === 'object' && obj !== null) {
-        if (obj._file === true && typeof obj.size === 'number') {
-          totalSize += obj.size
-        } else {
-          Object.values(obj).forEach(findFiles)
-        }
+    const findFiles = (obj: unknown): void => {
+      if (isStoredMedia(obj)) {
+        totalSize += obj.size
+      } else if (typeof obj === 'object' && obj !== null) {
+        Object.values(obj).forEach(findFiles)
       }
     }
 

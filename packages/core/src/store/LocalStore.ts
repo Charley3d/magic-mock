@@ -1,4 +1,4 @@
-import { LocalRecord } from '../types'
+import { CacheRecord } from '../types'
 import { calculateFileDelay, generateCacheKey } from '../utils'
 import { Store } from './Store'
 
@@ -21,7 +21,7 @@ export class LocalStore implements Store {
       throw new Error('Cache not found')
     }
 
-    const cached = JSON.parse(cacheResponse) as LocalRecord
+    const cached = JSON.parse(cacheResponse) as CacheRecord
 
     console.log('🔄 Serving from cache:', method, url)
     // Apply fake delay if file metadata detected
@@ -35,11 +35,11 @@ export class LocalStore implements Store {
 
     // Return native Response instead of MSW HttpResponse
     if (typeof cached.response === 'string') {
-      return new Response(cached.response, { status: 200, headers: {} })
+      return new Response(cached.response, { status: cached.status, headers: cached.headers })
     }
     return new Response(JSON.stringify(cached.response), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
+      status: cached.status,
+      headers: cached.headers,
     })
   }
 
@@ -53,7 +53,7 @@ export class LocalStore implements Store {
       response?: Response
     },
   ): Promise<void> {
-    const { url, method, body, data } = options
+    const { url, method, body, data, response } = options
 
     // Check body size against limit
     if (this.sizeLimit > 0 && body) {
@@ -64,12 +64,17 @@ export class LocalStore implements Store {
       }
     }
 
+    const status = response?.status
+    const headers = response ? response.headers : []
+
     const cacheKey = generateCacheKey(method, url, body)
-    const record: LocalRecord = {
+    const record: CacheRecord = {
       url,
       method,
       body,
       response: data,
+      status,
+      headers: Object.fromEntries(headers.entries()),
     }
 
     localStorage.setItem(cacheKey, JSON.stringify(record))

@@ -15,9 +15,7 @@ export function overrideFetch() {
     if (init?.body) {
       body = serializeBody(init.body)
     } else if (input instanceof Request && input.body) {
-      const cloned = input.clone()
-      const bodyText = await cloned.text()
-      body = bodyText
+      body = serializeBody(await input.clone().text())
     }
 
     // Check mock mode FIRST - try to serve from cache
@@ -31,8 +29,8 @@ export function overrideFetch() {
     const response = await originalFetch(...args)
 
     // Record if needed
-    if (isRecording() && isCacheable(url, method) && response.ok) {
-      await tryStoreResponse(url!, response, method, body)
+    if (isRecording() && url && isCacheable(url, method) && response.ok) {
+      await tryStoreResponse(url, response, method, body)
     }
 
     return response

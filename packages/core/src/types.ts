@@ -49,9 +49,18 @@ export interface MagicMockOptions {
 }
 
 export type RecordingMode = 'recording' | 'mocking' | 'off'
-export interface LocalRecord {
+export interface CacheRecord {
   url: string
   method: string
   body?: string
   response: string | Record<string, unknown>
+  status: number | undefined
+  headers: Record<string, string>
+}
+
+export interface StoredMedia {
+  _file: boolean
+  name: string
+  size: number
+  type: string
 }

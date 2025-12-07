@@ -1,5 +1,6 @@
-import { Store } from './Store'
+import { CacheRecord } from '../types'
 import { calculateFileDelay } from '../utils'
+import { Store } from './Store'
 
 export class RemoteStore implements Store {
   private sizeLimit: number
@@ -71,18 +72,19 @@ export class RemoteStore implements Store {
 
     const status = response?.status
     const headers = response ? response.headers : []
+    const record: CacheRecord = {
+      url,
+      method,
+      body,
+      response: data,
+      status,
+      headers: Object.fromEntries(headers.entries()),
+    }
 
     const res = await originalFetch('/api/__record', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url,
-        method,
-        body,
-        response: data,
-        status,
-        headers: Object.fromEntries(headers.entries()),
-      }),
+      body: JSON.stringify(record),
     })
     if (!res.ok) {
       throw new Error(`${response?.status} ${response?.statusText}`)

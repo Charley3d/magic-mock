@@ -111,15 +111,7 @@ export function overrideXHR() {
     serializedBody: string | undefined,
     originalBody?: Document | XMLHttpRequestBodyInit | null,
   ) {
-    // Store original onreadystatechange
-    const originalOnReadyStateChange = xhr.onreadystatechange
-
-    xhr.onreadystatechange = function () {
-      // Call original handler first
-      if (originalOnReadyStateChange) {
-        originalOnReadyStateChange.call(xhr, new Event('readystatechange'))
-      }
-
+    const recordingHandler = function () {
       // Record response when request is complete
       const safeUrl = getURL(url)
       if (
@@ -132,6 +124,7 @@ export function overrideXHR() {
         tryStoreXHRResponse(safeUrl!, xhr, method, serializedBody)
       }
     }
+    xhr.addEventListener('readystatechange', recordingHandler)
 
     return originalSend.call(xhr, originalBody)
   }
