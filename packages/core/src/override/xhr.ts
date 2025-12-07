@@ -124,7 +124,8 @@ export function overrideXHR() {
         tryStoreXHRResponse(safeUrl!, xhr, method, serializedBody)
       }
     }
-    xhr.addEventListener('readystatechange', recordingHandler)
+
+    xhr.addEventListener('readystatechange', recordingHandler, { once: true })
 
     return originalSend.call(xhr, originalBody)
   }
