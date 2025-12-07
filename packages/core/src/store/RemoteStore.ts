@@ -1,23 +1,49 @@
-import { HttpResponse } from 'msw'
+import { CacheRecord } from '../types'
+import { calculateFileDelay } from '../utils'
 import { Store } from './Store'
 
 export class RemoteStore implements Store {
-  async get(originalFetch: typeof window.fetch, options: { url: string }) {
-    const { url } = options
-    const cacheResponse = await originalFetch('/api/__get-cache?url=' + encodeURIComponent(url))
+  private sizeLimit: number
+
+  constructor(sizeLimit: number = 1000000) {
+    this.sizeLimit = sizeLimit
+  }
+
+  async get(
+    originalFetch: typeof window.fetch,
+    options: { url: string; method: string; body?: string },
+  ): Promise<Response> {
+    const { url, method, body } = options
+    const params = new URLSearchParams({
+      url,
+      method,
+      ...(body && { body }),
+    })
+
+    const cacheResponse = await originalFetch(`/api/__get-cache?${params}`)
 
     if (!cacheResponse.ok) {
       throw new Error('Cache not found')
     }
 
     const cached = await cacheResponse.json()
-    console.log('🔄 Serving from cache:', url)
+    console.log('🔄 Serving from cache:', method, url)
 
-    if (typeof cached.response === 'string') {
-      return new HttpResponse(cached.response, { status: cached.status, headers: cached.headers })
+    // Apply fake delay if file metadata detected
+    if (body) {
+      const delay = calculateFileDelay(body)
+      if (delay > 0) {
+        console.log(`⏱️ Simulating upload delay: ${delay}ms`)
+        await new Promise((resolve) => setTimeout(resolve, delay))
+      }
     }
 
-    return HttpResponse.json(cached.response, {
+    // Return native Response instead of MSW HttpResponse
+    if (typeof cached.response === 'string') {
+      return new Response(cached.response, { status: cached.status, headers: cached.headers })
+    }
+
+    return new Response(JSON.stringify(cached.response), {
       status: cached.status,
       headers: cached.headers,
     })
@@ -25,26 +51,45 @@ export class RemoteStore implements Store {
 
   async set(
     originalFetch: typeof window.fetch,
-    options: { url: string; data: string | Record<string, unknown>; response?: Response },
+    options: {
+      url: string
+      method: string
+      body?: string
+      data: string | Record<string, unknown>
+      response?: Response
+    },
   ): Promise<void> {
-    const { url, data, response } = options
+    const { url, method, body, data, response } = options
+
+    // Check body size against limit
+    if (this.sizeLimit > 0 && body) {
+      const bodySize = new Blob([body]).size
+      if (bodySize > this.sizeLimit) {
+        console.warn(`⚠️ Body too large to cache (${bodySize} bytes, limit: ${this.sizeLimit})`)
+        return
+      }
+    }
+
     const status = response?.status
     const headers = response ? response.headers : []
+    const record: CacheRecord = {
+      url,
+      method,
+      body,
+      response: data,
+      status,
+      headers: Object.fromEntries(headers.entries()),
+    }
 
     const res = await originalFetch('/api/__record', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url,
-        response: data,
-        status: status,
-        headers: Object.fromEntries(headers.entries()),
-      }),
+      body: JSON.stringify(record),
     })
     if (!res.ok) {
       throw new Error(`${response?.status} ${response?.statusText}`)
     } else {
-      console.log('✅ Cached:', url)
+      console.log('✅ Cached:', method, url)
     }
   }
 }
