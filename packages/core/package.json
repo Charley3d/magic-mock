@@ -32,13 +32,19 @@
     "build": "tsdown --minify",
     "dev": "tsdown --watch",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.18.11",
+    "@vitest/coverage-v8": "^2.1.8",
+    "jsdom": "^25.0.1",
     "tsdown": "^0.16.6",
-    "typescript": "~5.9.0"
+    "typescript": "~5.9.0",
+    "vitest": "^2.1.8"
   },
   "repository": {
     "type": "git",

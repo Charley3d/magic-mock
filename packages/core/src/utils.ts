@@ -1,18 +1,33 @@
 import { StoredMedia } from './types'
 
 /**
- * Encode URL to safe filename
+ * Encode URL to safe filename using browser-compatible base64 encoding
+ * Uses URL-safe base64 variant: / -> _ and + -> - , removes padding =
  */
 export function urlToFilename(url: string): string {
-  return Buffer.from(url).toString('base64').replace(/[/+=]/g, '_') + '.json'
+  const base64 = btoa(url)
+    .replace(/\//g, '_')
+    .replace(/\+/g, '-')
+    .replace(/=/g, '')
+  return base64 + '.json'
 }
 
 /**
- * Decode filename back to URL
+ * Decode filename back to URL using browser-compatible base64 decoding
+ * Reverses URL-safe base64: _ -> / and - -> + , restores padding
  */
 export function filenameToUrl(filename: string): string {
-  const base64 = filename.replace('.json', '').replace(/_/g, '/')
-  return Buffer.from(base64, 'base64').toString('utf-8')
+  // Remove .json extension
+  let base64 = filename.replace('.json', '')
+
+  // Restore base64 characters
+  base64 = base64.replace(/_/g, '/').replace(/-/g, '+')
+
+  // Restore padding
+  const paddingNeeded = (4 - (base64.length % 4)) % 4
+  base64 = base64 + '='.repeat(paddingNeeded)
+
+  return atob(base64)
 }
 
 export const isMedia = (url: URL) => {
