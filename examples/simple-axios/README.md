@@ -1,6 +1,6 @@
-# Magic Mock - Axios XHR Example
+# Magic Mock - Axios Pokemon Explorer
 
-This example demonstrates Magic Mock's compatibility with **Axios**, a popular promise-based HTTP client that uses **XMLHttpRequest (XHR)** under the hood.
+This example demonstrates Magic Mock's compatibility with **Axios**, a popular promise-based HTTP client that uses **XMLHttpRequest (XHR)** under the hood. The demo fetches multiple Pokemon from the PokeAPI in parallel using `Promise.all` to showcase the performance benefits of magic-mock.
 
 > **Note**: This is a standalone example using `@magicmock/core` directly. It stores mocks in **memory only** (browser storage). For persistent filesystem caching, use the `@magicmock/unplugin` with a bundler like Vite or Webpack.
 
@@ -10,19 +10,24 @@ While modern frameworks often use the `fetch` API, **Axios** remains one of the 
 
 ## What This Example Does
 
-The example creates a simple web page that:
+The example creates a Pokemon explorer that:
 
-- Fetches GitHub repository events for the React project using Axios
-- Displays the events in a formatted list with timestamps
-- Shows request round-trip time (RTT) to demonstrate the speed difference between real API calls and cached responses
+- Fetches multiple Pokemon from PokeAPI in parallel using `Promise.all`
+- Allows selection of 1, 5, 10, 25, or 50 Pokemon to fetch
+- Displays Pokemon cards with sprites, types, and stats
+- Shows total request time and average time per Pokemon to demonstrate the speed difference between real API calls and cached responses
 - Uses Magic Mock's recording/mocking UI to control request behavior
+
+**Performance Demonstration**: When fetching 50 Pokemon:
+- **Recording Mode (real API)**: ~5000-10000ms total
+- **Mocking Mode (cached)**: ~50-200ms total (100x faster!)
 
 ## Project Structure
 
 ```
 simple-axios/
-├── index.html           # Main HTML page with Axios integration
-├── main.js              # Application logic using axios.get()
+├── index.html           # Main HTML page with Pokemon UI
+├── main.js              # Application logic using axios and Promise.all
 ├── package.json         # Dependencies (@magicmock/core)
 ├── client-script.js     # Magic Mock client (from @magicmock/core)
 └── README.md           # This file
@@ -69,58 +74,65 @@ Then open your browser to `http://localhost:8000`
 
 ## Usage
 
-1. **Initial Load**: The page loads with a "Fetch GitHub Events" button
+1. **Initial Load**: The page loads with a selectbox and "Fetch Pokemon" button
 2. **Click "⏺ Record"** (top-right button): Enables recording mode
-3. **Click "Fetch GitHub Events"**: Makes a real API call to GitHub, records the response, and displays events with RTT
-4. **Click "🔄 Mock"**: Switches to mock mode
-5. **Click "Fetch GitHub Events" again**: Serves the cached response instantly (notice the much lower RTT!)
+3. **Select Pokemon count**: Choose 1, 5, 10, 25, or 50 Pokemon
+4. **Click "Fetch Pokemon"**: Makes real API calls to PokeAPI in parallel, records responses, and displays Pokemon cards with total time
+5. **Click "🔄 Mock"**: Switches to mock mode
+6. **Click "Fetch Pokemon" again**: Serves all cached responses instantly (notice the dramatically lower time!)
 
 ### Expected Behavior
 
-- **Recording Mode**: RTT typically 200-1000ms (actual network request)
-- **Mocking Mode**: RTT typically 1-20ms (served from cache)
+- **Recording Mode (50 Pokemon)**: Total time typically 5000-10000ms
+- **Mocking Mode (50 Pokemon)**: Total time typically 50-200ms (100x faster!)
 - **Off Mode**: Normal behavior, no interception
 
 ## Technical Details
 
-### Axios XHR vs Modern Fetch
+### Parallel Requests with Promise.all
 
-Axios uses `XMLHttpRequest` under the hood in browsers:
+The example demonstrates efficient parallel request handling:
 
 ```javascript
-axios
-  .get('https://api.github.com/repos/facebook/react/events?per_page=500')
-  .then(function (response) {
-    const data = response.data
-    /* ... */
-  })
-  .catch(function (error) {
-    console.error('Error:', error)
+const requests = selectedPokemon.map((name) =>
+  axios.get(`https://pokeapi.co/api/v2/pokemon/${name}`)
+)
+
+Promise.all(requests)
+  .then(function (responses) {
+    // All requests completed in parallel
+    responses.forEach(function (response) {
+      displayPokemon(response.data)
+    })
   })
 ```
 
-Magic Mock intercepts this at the XHR level and provides the same recording/mocking functionality as it does for modern `fetch()` calls.
+Magic Mock intercepts each Axios request at the XHR level and provides the same recording/mocking functionality for all parallel requests.
 
 ### What Gets Cached
 
-When you record a request, Magic Mock stores:
+When you record requests, Magic Mock stores:
 
-- Full URL with query parameters
-- Response body
+- Full URL for each Pokemon
+- Response body with Pokemon data (sprites, types, stats)
 - HTTP status code
 - Response headers
 
-**Important**: In this standalone example, cached responses are stored **in-memory only** using the browser's localStorage/Service Worker cache. They will persist across page reloads but are specific to your browser.
+**Important**: In this standalone example, cached responses are stored **in-memory only** using the browser's localStorage. They will persist across page reloads but are specific to your browser.
 
 For **persistent filesystem caching** (`.request-cache/` directory with JSON files that can be committed to git), you need to use `@magicmock/unplugin` with a bundler. See the [Vite + Vue example](../vite-vue/) for filesystem-based caching.
 
 ### Key Features Demonstrated
 
-✅ **XHR Compatibility**: Works with Axios's `axios.get()`, `axios.post()`, `axios.request()`, etc.
-✅ **Promise-based API**: Demonstrates compatibility with modern promise-based HTTP clients
+✅ **XHR Compatibility**: Works with Axios's `axios.get()`, `axios.post()`, `axios.put()`, `axios.delete()`
+✅ **Promise.all Support**: Handles multiple parallel requests efficiently
 ✅ **Transparent Interception**: No code changes required in application logic
-✅ **Performance Monitoring**: RTT display helps visualize the speed improvement
+✅ **Performance Benefits**: Dramatic speed improvement visible with 25-50 Pokemon
 ✅ **State Persistence**: Mock/record state persists across page reloads (localStorage)
+
+## Future Enhancements
+
+The UI is designed with space for additional buttons to demonstrate POST, PUT, and DELETE methods in future updates. The current implementation focuses on GET requests to establish the baseline functionality.
 
 ## Standalone vs Plugin Comparison
 
@@ -145,11 +157,13 @@ This makes Magic Mock suitable for:
 - Testing Axios-based applications
 - Working with codebases that use Axios alongside fetch
 - Demonstrating XHR compatibility without a bundler setup
+- Showcasing performance benefits with parallel requests
 
 ## Dependencies
 
 - **Axios 1.6.0**: Loaded from CDN for promise-based XHR requests
 - **@magicmock/core**: Provides Magic Mock client with fetch/XHR interception
+- **PokeAPI**: Free public API for Pokemon data
 
 ## Troubleshooting
 
@@ -170,13 +184,19 @@ Make sure the page is served over HTTP (not `file://`).
 3. Check browser DevTools → Application → Local Storage for the cached requests
 4. Note: This standalone version uses in-memory caching only (no `.request-cache/` directory)
 
+### Some Pokemon Not Loading
+
+The example uses a predefined list of 50 Pokemon names. If you encounter issues, check the browser console for specific API errors.
+
 ## Related Examples
 
 - [Vite + Vue Example](../vite-vue/): Modern Vue 3 application using fetch API
-- [Webpack + Vue CLI Example](../vue-cli/): Vue CLI project with Webpack configuration
+- [Webpack + Vue CLI Example](../cli-vue/): Vue CLI project with Webpack configuration
+- [Simple jQuery Example](../simple-jquery/): Another standalone example with jQuery
 
 ## Learn More
 
 - [Main README](../../README.md): Full Magic Mock documentation
 - [Axios Documentation](https://axios-http.com/docs/intro): Learn about Axios
 - [XMLHttpRequest MDN](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest): Understanding the XHR API
+- [PokeAPI Documentation](https://pokeapi.co/docs/v2): Pokemon API reference
