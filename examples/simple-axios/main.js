@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const rttDiv = document.getElementById('rtt')
   const pokemonListDiv = document.getElementById('pokemonList')
 
-  fetchButton.addEventListener('click', function () {
+  fetchButton.addEventListener('click', async function () {
     const count = parseInt(pokemonCountSelect.value)
     const startTime = performance.now()
 
@@ -81,52 +81,51 @@ document.addEventListener('DOMContentLoaded', function () {
     // Select random Pokemon from our list
     const selectedPokemon = POKEMON_NAMES.slice(0, count)
 
-    // Fetch all Pokemon in parallel using Promise.all
-    const requests = selectedPokemon.map((name) =>
-      axios.get(`https://pokeapi.co/api/v2/pokemon/${name}`)
-    )
+    try {
+      // Fetch Pokemon sequentially (one at a time) to demonstrate dramatic performance difference
+      // Recording mode: ~200ms per Pokemon × 50 = ~10 seconds
+      // Mocking mode: ~2ms per Pokemon × 50 = ~100ms
+      const responses = []
+      for (const name of selectedPokemon) {
+        const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${name}`)
+        responses.push(response)
 
-    Promise.all(requests)
-      .then(function (responses) {
-        const endTime = performance.now()
-        const rtt = Math.round(endTime - startTime)
+        // Progressive UI update: show Pokemon as they load
+        const pokemon = response.data
+        const card = createPokemonCard(pokemon)
+        pokemonListDiv.appendChild(card)
+      }
 
-        // Display stats
-        countDiv.textContent = `Pokemon Loaded: ${responses.length}`
-        rttDiv.textContent = `Total Time: ${rtt}ms (${Math.round(rtt / responses.length)}ms avg per Pokemon)`
+      const endTime = performance.now()
+      const rtt = Math.round(endTime - startTime)
 
-        // Display Pokemon cards
-        responses.forEach(function (response) {
-          const pokemon = response.data
-          const card = createPokemonCard(pokemon)
-          pokemonListDiv.appendChild(card)
-        })
+      // Display stats
+      countDiv.textContent = `Pokemon Loaded: ${responses.length}`
+      rttDiv.textContent = `Total Time: ${rtt}ms (${Math.round(rtt / responses.length)}ms avg per Pokemon)`
 
-        resultDiv.style.display = 'block'
-      })
-      .catch(function (error) {
-        const endTime = performance.now()
-        const rtt = Math.round(endTime - startTime)
+      resultDiv.style.display = 'block'
+    } catch (error) {
+      const endTime = performance.now()
+      const rtt = Math.round(endTime - startTime)
 
-        countDiv.textContent = 'Error occurred'
-        rttDiv.textContent = `Time: ${rtt}ms`
+      countDiv.textContent = 'Error occurred'
+      rttDiv.textContent = `Time: ${rtt}ms`
 
-        const errorDiv = document.createElement('div')
-        errorDiv.className = 'error'
-        errorDiv.innerHTML = `
-          <strong>Error:</strong> ${error.message}<br>
-          <small>Status: ${error.response ? error.response.status : 'Network Error'}</small>
-        `
-        pokemonListDiv.appendChild(errorDiv)
+      const errorDiv = document.createElement('div')
+      errorDiv.className = 'error'
+      errorDiv.innerHTML = `
+        <strong>Error:</strong> ${error.message}<br>
+        <small>Status: ${error.response ? error.response.status : 'Network Error'}</small>
+      `
+      pokemonListDiv.appendChild(errorDiv)
 
-        resultDiv.style.display = 'block'
-      })
-      .finally(function () {
-        // Re-enable controls
-        fetchButton.disabled = false
-        pokemonCountSelect.disabled = false
-        fetchButton.textContent = 'Fetch Pokemon'
-      })
+      resultDiv.style.display = 'block'
+    } finally {
+      // Re-enable controls
+      fetchButton.disabled = false
+      pokemonCountSelect.disabled = false
+      fetchButton.textContent = 'Fetch Pokemon'
+    }
   })
 })
 

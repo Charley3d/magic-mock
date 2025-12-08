@@ -45,12 +45,32 @@ You are a senior software engineer with deep expertise in end-to-end testing usi
 - Handle loading states and async operations properly with `waitFor` methods
 - Make tests resilient to timing variations and network delays
 - Clean up test data and state when necessary
+- **Always await async operations directly** - Don't create unnecessary promise variables:
+  ```typescript
+  // WRONG - unnecessary variable
+  const clickPromise = button.click()
+  await clickPromise
+
+  // CORRECT - await directly
+  await button.click()
+  ```
+  Only store promises in variables if you need to perform intermediate checks before awaiting
 
 **Performance:**
 - Parallelize tests when possible using Playwright's built-in parallelization
 - Share authentication state across tests to avoid repeated logins
 - Mock external dependencies that aren't part of the test scope
 - Keep test data setup minimal and focused
+- **Limit API requests in tests** - Use a maximum of 25 Pokemon to avoid spamming the PokeAPI server. Always use the `POKEMON_COUNTS` constant from `pokemon-helpers.ts`:
+  ```typescript
+  import { POKEMON_COUNTS } from '../helpers/pokemon-helpers'
+
+  // Use semantic constants instead of magic numbers
+  await selectPokemonCount(page, POKEMON_COUNTS.SMALL)  // 5
+  await selectPokemonCount(page, POKEMON_COUNTS.MEDIUM) // 10
+  await selectPokemonCount(page, POKEMON_COUNTS.LARGE)  // 25 (max for tests)
+  // Avoid POKEMON_COUNTS.MAX (50) to prevent API spam
+  ```
 
 ## Coverage Strategy
 
@@ -120,3 +140,54 @@ You should explicitly recommend against:
 - Testing framework behavior rather than application behavior
 
 Always prioritize tests that give real confidence in the application over tests that exist solely to hit coverage metrics.
+
+## Magic-Mock Project Specific Guidelines
+
+**CRITICAL: For this magic-mock project, E2E tests serve ONE primary purpose:**
+Testing that the magic-mock library itself works correctly. Tests should focus EXCLUSIVELY on:
+
+1. **Mode Switching**: Verify the HUD controls work (Record, Mock, Off modes)
+   - **IMPORTANT**: There are only 2 TOGGLE buttons (Record and Mock), NOT 3 separate mode buttons
+   - Record button toggles: OFF ↔ Recording
+   - Mock button toggles: OFF ↔ Mocking
+   - "Off mode" = both buttons in OFF state (not a separate button!)
+   - State stored in localStorage: `magic-mock-recording` and `magic-mock-mocking`
+2. **Request Interception**: Confirm requests are being intercepted in Record and Mock modes
+3. **Response Caching**: Verify responses are stored correctly during Record mode
+4. **Mock Playback**: Verify cached responses are returned correctly during Mock mode
+5. **Storage Mechanisms**: Test both LocalStore (memory) and RemoteStore (filesystem) work correctly
+
+**DO NOT test:**
+- General application features (button clicks, form validations, UI rendering)
+- Example application business logic (Pokemon lists, user interactions)
+- Styling, animations, or cosmetic features
+- Framework-specific behaviors (Vue reactivity, component lifecycle)
+- Navigation or routing (unless it relates to magic-mock state persistence)
+
+**Test Structure for Magic-Mock:**
+Each E2E test should follow this pattern:
+1. Navigate to the example application
+2. Switch to Record mode via HUD (toggle Record button ON, ensure Mock button OFF)
+3. Trigger HTTP requests (fetch/XHR)
+4. Verify requests were made to real API
+5. Switch to Mock mode (toggle Mock button ON, ensure Record button OFF)
+6. Trigger same requests again
+7. Verify mocked responses are returned (faster, no network calls)
+8. Test mode persistence across page reloads if applicable
+9. Test "Off mode" by ensuring both buttons are toggled OFF
+
+**Example Test Naming:**
+- ✅ "should record and replay GET requests in mock mode"
+- ✅ "should persist mock mode state after page reload"
+- ✅ "should switch between Record/Mock/Off modes via HUD"
+- ❌ "should display Pokemon cards correctly"
+- ❌ "should validate form inputs"
+- ❌ "should navigate to detail page on click"
+
+**Keep Tests Minimal:**
+- One test file per example project is often sufficient
+- 3-5 tests per file covering core magic-mock functionality
+- Focus on different HTTP methods (GET, POST, PUT, DELETE)
+- Test both fetch and XHR if the example uses both
+
+When asked to create or review tests for magic-mock examples, always ask yourself: "Does this test verify magic-mock functionality, or just the example app?" If it's the latter, don't write/keep the test.

@@ -8,6 +8,15 @@
     "build": "pnpm -r --filter './packages/*' build",
     "dev": "pnpm -r --parallel --filter './packages/*' dev",
     "test": "pnpm -r test",
+    "test:e2e": "playwright test",
+    "test:e2e:simple-axios": "playwright test --project=simple-axios --ui",
+    "test:e2e:simple-jquery": "playwright test --project=simple-jquery",
+    "test:e2e:cli-vue": "playwright test --project=cli-vue",
+    "test:e2e:vite-vue": "playwright test --project=vite-vue",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
     "clean": "pnpm -r --parallel clean",
@@ -17,6 +26,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
+    "@playwright/test": "^1.57.0",
     "eslint": "^9.37.0",
     "prettier": "^3.6.2",
     "typescript": "~5.9.0"

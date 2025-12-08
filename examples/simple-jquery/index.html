@@ -7,10 +7,29 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        max-width: 800px;
+        max-width: 900px;
         margin: 50px auto;
         padding: 20px;
         text-align: center;
+      }
+      .controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin: 20px 0;
+      }
+      label {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      select {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: 2px solid #0066cc;
+        border-radius: 5px;
+        background-color: white;
+        cursor: pointer;
       }
       button {
         background-color: #0066cc;
@@ -20,45 +39,101 @@
         font-size: 16px;
         border-radius: 5px;
         cursor: pointer;
-        margin: 20px;
       }
       button:hover {
         background-color: #0052a3;
       }
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
       .result {
-        margin-top: 20px;
+        margin-top: 30px;
         padding: 20px;
         border: 1px solid #ccc;
         border-radius: 5px;
         background-color: #f9f9f9;
         text-align: left;
       }
-      .rtt {
+      .stats {
         font-weight: bold;
         color: #0066cc;
-        margin-bottom: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #0066cc;
       }
-      .events {
-        max-height: 400px;
+      .pokemon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        max-height: 600px;
         overflow-y: auto;
       }
-      .event {
-        margin: 10px 0;
-        padding: 10px;
-        border-left: 3px solid #0066cc;
+      .pokemon-card {
+        padding: 15px;
+        border: 2px solid #0066cc;
+        border-radius: 8px;
         background-color: #fff;
+        text-align: center;
+      }
+      .pokemon-card img {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 10px;
+      }
+      .pokemon-name {
+        font-weight: bold;
+        font-size: 18px;
+        text-transform: capitalize;
+        margin-bottom: 5px;
+      }
+      .pokemon-types {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .type-badge {
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        color: white;
+        background-color: #888;
+      }
+      .error {
+        color: #cc0000;
+        padding: 15px;
+        border: 2px solid #cc0000;
+        border-radius: 5px;
+        background-color: #ffe6e6;
       }
     </style>
   </head>
   <body>
-    <h1>Magic Mock - jQuery XHR Example</h1>
-    <p>Click the button below to fetch React repository events from GitHub API using jQuery XHR</p>
+    <h1>Magic Mock - Pokemon Explorer</h1>
+    <p>Select how many Pokemon to fetch and see the magic-mock performance difference!</p>
 
-    <button id="fetchButton">Fetch GitHub Events</button>
+    <div class="controls">
+      <label for="pokemonCount">Number of Pokemon:</label>
+      <select id="pokemonCount">
+        <option value="1">1</option>
+        <option value="5" selected>5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+      <button id="fetchButton">Fetch Pokemon</button>
+    </div>
 
     <div id="result" class="result" style="display: none">
-      <div id="rtt" class="rtt"></div>
-      <div id="events" class="events"></div>
+      <div class="stats">
+        <span id="count"></span>
+        <span id="rtt"></span>
+      </div>
+      <div id="pokemonList" class="pokemon-grid"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
