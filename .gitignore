@@ -72,24 +72,9 @@ pnpm-debug.log*
 *.local
 
 # AI related files
-.claude/
-.cursor/
-.aider*
-.copilot/
-.codeium/
-.tabnine/
-.ai-*
-*.ai
-cursor.rules
-.cursorrules
-CLAUDE.md
-.anthropic/
-.openai/
-claude-*.json
-gpt-*.json
-ai-*.json
-.llm/
-.assistant/
+**/.claude/*
+!**/.claude/settings.json
+!**/.claude/commands/
 
 # Cypress
 /cypress/videos/
