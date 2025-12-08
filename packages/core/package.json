@@ -1,6 +1,6 @@
 {
   "name": "@magicmock/core",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Core functionality for Magic Mock - HTTP request recording and replay",
   "author": "Charley <charley.makevideo@gmail.com>",
   "license": "MIT",
