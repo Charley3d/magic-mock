@@ -14,7 +14,7 @@ import {
   isRecording,
   isMocking,
 } from '../src/utils'
-import { createMockFormData, createMockFile } from './test-utils'
+import { createMockFormData, createMockFile, TEST_FILE_SIZES } from './test-utils'
 
 describe('utils', () => {
   describe('urlToFilename', () => {
@@ -22,15 +22,22 @@ describe('utils', () => {
       const url = 'https://api.example.com/users'
       const filename = urlToFilename(url)
 
-      expect(filename).toMatch(/^[A-Za-z0-9_]+\.json$/)
-      expect(filename).toContain('_')
+      // URL-safe base64: uses A-Z, a-z, 0-9, _ (for /), and - (for +)
+      expect(filename).toMatch(/^[A-Za-z0-9_-]+\.json$/)
+      expect(filename).not.toContain('/')
+      expect(filename).not.toContain('+')
+      expect(filename).not.toContain('=')
     })
 
     it('should handle URLs with special characters', () => {
       const url = 'https://api.example.com/users?id=123&name=test'
       const filename = urlToFilename(url)
 
-      expect(filename).toMatch(/^[A-Za-z0-9_]+\.json$/)
+      // URL-safe base64: should not contain / + or =
+      expect(filename).toMatch(/^[A-Za-z0-9_-]+\.json$/)
+      expect(filename).not.toContain('/')
+      expect(filename).not.toContain('+')
+      expect(filename).not.toContain('=')
     })
 
     it('should produce consistent output for same URL', () => {
@@ -48,8 +55,7 @@ describe('utils', () => {
       const filename = urlToFilename(originalUrl)
       const decodedUrl = filenameToUrl(filename)
 
-      // May have trailing padding character, normalize
-      expect(decodedUrl.replace(/\?+$/, '')).toBe(originalUrl)
+      expect(decodedUrl).toBe(originalUrl)
     })
 
     it('should handle filenames with underscores', () => {
@@ -57,8 +63,7 @@ describe('utils', () => {
       const filename = urlToFilename(originalUrl)
       const decodedUrl = filenameToUrl(filename)
 
-      // May have extra padding, check if URL contains original
-      expect(decodedUrl.startsWith(originalUrl)).toBe(true)
+      expect(decodedUrl).toBe(originalUrl)
     })
   })
 
@@ -319,22 +324,22 @@ describe('utils', () => {
         file: {
           _file: true,
           name: 'test.txt',
-          size: 1048576, // 1MB
+          size: TEST_FILE_SIZES.ONE_MB,
           type: 'text/plain',
         },
       }
       const body = JSON.stringify(fileMetadata)
-      const delay = calculateFileDelay(body, 1048576) // 1MB/s
+      const delay = calculateFileDelay(body, TEST_FILE_SIZES.ONE_MB)
       expect(delay).toBe(1000) // Should be 1 second
     })
 
     it('should handle multiple files', () => {
       const fileMetadata = {
-        file1: { _file: true, name: 'test1.txt', size: 524288, type: 'text/plain' }, // 0.5MB
-        file2: { _file: true, name: 'test2.txt', size: 524288, type: 'text/plain' }, // 0.5MB
+        file1: { _file: true, name: 'test1.txt', size: TEST_FILE_SIZES.HALF_MB, type: 'text/plain' },
+        file2: { _file: true, name: 'test2.txt', size: TEST_FILE_SIZES.HALF_MB, type: 'text/plain' },
       }
       const body = JSON.stringify(fileMetadata)
-      const delay = calculateFileDelay(body, 1048576) // 1MB/s
+      const delay = calculateFileDelay(body, TEST_FILE_SIZES.ONE_MB)
       expect(delay).toBe(1000) // Total 1MB at 1MB/s = 1 second
     })
 
@@ -343,12 +348,12 @@ describe('utils', () => {
         file: {
           _file: true,
           name: 'test.txt',
-          size: 1048576, // 1MB
+          size: TEST_FILE_SIZES.ONE_MB,
           type: 'text/plain',
         },
       }
       const body = JSON.stringify(fileMetadata)
-      const delay = calculateFileDelay(body, 2097152) // 2MB/s
+      const delay = calculateFileDelay(body, TEST_FILE_SIZES.TWO_MB)
       expect(delay).toBe(500) // Should be 0.5 seconds
     })
 
@@ -359,7 +364,7 @@ describe('utils', () => {
             file: {
               _file: true,
               name: 'test.txt',
-              size: 1048576,
+              size: TEST_FILE_SIZES.ONE_MB,
               type: 'text/plain',
             },
           },
@@ -381,12 +386,12 @@ describe('utils', () => {
         file: {
           _file: true,
           name: 'test.txt',
-          size: 100,
+          size: TEST_FILE_SIZES.ONE_HUNDRED_BYTES,
           type: 'text/plain',
         },
       }
       const body = JSON.stringify(fileMetadata)
-      const delay = calculateFileDelay(body, 1048576)
+      const delay = calculateFileDelay(body, TEST_FILE_SIZES.ONE_MB)
       expect(Number.isInteger(delay)).toBe(true)
     })
   })

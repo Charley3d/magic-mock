@@ -1,6 +1,16 @@
 import { vi } from 'vitest'
 
 /**
+ * Test constants for file sizes
+ */
+export const TEST_FILE_SIZES = {
+  ONE_MB: 1048576,
+  HALF_MB: 524288,
+  TWO_MB: 2097152,
+  ONE_HUNDRED_BYTES: 100,
+}
+
+/**
  * Create a mock fetch function that can be controlled in tests
  */
 export function createMockFetch() {

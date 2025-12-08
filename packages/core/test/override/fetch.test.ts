@@ -127,16 +127,19 @@ describe('overrideFetch', () => {
     })
 
     it.skip('should fall back to real request on cache miss', async () => {
-      // This test requires complex mocking of originalFetch
-      // Skipping as it tests implementation details that are covered by integration tests
+      // TODO: Skipped - Requires mocking originalFetch while also testing the override
+      // This creates circular dependencies in test setup
+      // Recommended: Add integration test to verify real network fallback behavior
     })
 
     it.skip('should not mock media files', async () => {
-      // Skipping - tested by unit tests in utils.test.ts for isCacheable
+      // TODO: Skipped - Media file filtering is covered by utils.test.ts (isMedia, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
 
     it.skip('should not mock internal API endpoints', async () => {
-      // Skipping - tested by unit tests in utils.test.ts for isCacheable
+      // TODO: Skipped - Internal API filtering is covered by utils.test.ts (isApi, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
 
     it('should handle Request objects', async () => {
@@ -185,40 +188,50 @@ describe('overrideFetch', () => {
     })
 
     it.skip('should record successful responses', async () => {
-      // Skipping - requires complex mocking of originalFetch
-      // Recording functionality is tested in integration tests
+      // TODO: Skipped - Requires mocking originalFetch while preserving override behavior
+      // Recording requires actual fetch execution and response capture
+      // Recommended: Add integration test with real network or service worker mocking
     })
 
     it.skip('should not record failed responses', async () => {
-      // Skipping - requires complex mocking
+      // TODO: Skipped - Testing error responses requires complex fetch mock setup
+      // Recommended: Add integration test to verify 4xx/5xx responses aren't cached
     })
 
     it.skip('should record request body', async () => {
-      // Skipping - requires complex mocking
+      // TODO: Skipped - Body recording is part of the recording flow tested above
+      // Body serialization is covered by utils.test.ts (serializeBody)
+      // Recommended: Add integration test for end-to-end verification
     })
 
     it.skip('should record JSON responses', async () => {
-      // Skipping - requires complex mocking
+      // TODO: Skipped - Response type handling requires real fetch execution
+      // Recommended: Add integration test to verify JSON responses are properly stored
     })
 
     it.skip('should record text responses', async () => {
-      // Skipping - requires complex mocking
+      // TODO: Skipped - Response type handling requires real fetch execution
+      // Recommended: Add integration test to verify text responses are properly stored
     })
 
     it.skip('should not record media files', async () => {
-      // Skipping - tested in utils tests
+      // TODO: Skipped - Media file filtering is covered by utils.test.ts (isMedia, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
 
     it.skip('should not record internal API endpoints', async () => {
-      // Skipping - tested in utils tests
+      // TODO: Skipped - Internal API filtering is covered by utils.test.ts (isApi, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
 
     it.skip('should handle recording errors gracefully', async () => {
-      // Skipping - requires complex mocking
+      // TODO: Skipped - Error handling during recording requires complex async flow simulation
+      // Recommended: Add integration test or use Playwright/Cypress for browser testing
     })
 
     it.skip('should handle disallowed HTTP methods', async () => {
-      // Skipping - tested in utils tests
+      // TODO: Skipped - Method filtering is covered by utils.test.ts (isMethodAllowed, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
   })
 
@@ -244,15 +257,21 @@ describe('overrideFetch', () => {
 
   describe('edge cases', () => {
     it.skip('should handle FormData body', async () => {
-      // Skipping - requires complex mocking
+      // TODO: Skipped - FormData handling requires real fetch execution
+      // FormData serialization is covered by utils.test.ts (serializeFormData, serializeBody)
+      // Recommended: Add integration test for end-to-end verification
     })
 
     it.skip('should handle Request with body', async () => {
-      // Skipping - requires complex mocking
+      // TODO: Skipped - Request object body extraction requires async operations
+      // Basic Request handling is tested in 'should handle Request objects'
+      // Recommended: Add integration test for Request body serialization
     })
 
     it.skip('should handle relative URLs', async () => {
-      // Skipping - basic functionality tested elsewhere
+      // TODO: Skipped - Relative URL parsing is covered by utils.test.ts (getURL)
+      // Basic functionality tested in other test cases
+      // Recommended: Add integration test if relative URL handling is critical
     })
   })
 })

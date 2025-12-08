@@ -272,8 +272,10 @@ describe('client-script', () => {
     })
 
     it.skip('should work correctly with various document states', async () => {
-      // Skipping - complex state management across multiple imports
-      // Core functionality tested in other tests
+      // TODO: Skipped - Testing different document.readyState values requires complex setup
+      // document.readyState is read-only and difficult to mock in jsdom
+      // Core DOMContentLoaded functionality is tested in 'should initialize UI on DOMContentLoaded'
+      // Recommended: Add integration test with real browser lifecycle or Playwright
     })
   })
 })

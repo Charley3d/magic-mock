@@ -5,7 +5,6 @@ import {
   enableRecordingMode,
   enableMockingMode,
   disableAllModes,
-  waitFor,
 } from '../test-utils'
 
 // Mock the store module
@@ -110,10 +109,10 @@ describe('overrideXHR', () => {
       xhr.open('GET', 'http://example.com/api/users')
       xhr.send()
 
-      await waitFor(10)
-
-      expect(mockStore.get).toHaveBeenCalled()
-      expect(loadEventFired).toBe(true)
+      await vi.waitFor(() => {
+        expect(mockStore.get).toHaveBeenCalled()
+        expect(loadEventFired).toBe(true)
+      })
     })
 
     it('should pass correct parameters to store.get', async () => {
@@ -126,12 +125,12 @@ describe('overrideXHR', () => {
       xhr.open('GET', 'http://example.com/api/users')
       xhr.send()
 
-      await waitFor(10)
-
-      expect(mockStore.get).toHaveBeenCalledWith(expect.any(Function), {
-        url: 'http://example.com/api/users',
-        method: 'GET',
-        body: undefined,
+      await vi.waitFor(() => {
+        expect(mockStore.get).toHaveBeenCalledWith(expect.any(Function), {
+          url: 'http://example.com/api/users',
+          method: 'GET',
+          body: undefined,
+        })
       })
     })
 
@@ -147,12 +146,12 @@ describe('overrideXHR', () => {
       xhr.open('POST', 'http://example.com/api/users')
       xhr.send(body)
 
-      await waitFor(10)
-
-      expect(mockStore.get).toHaveBeenCalledWith(expect.any(Function), {
-        url: 'http://example.com/api/users',
-        method: 'POST',
-        body,
+      await vi.waitFor(() => {
+        expect(mockStore.get).toHaveBeenCalledWith(expect.any(Function), {
+          url: 'http://example.com/api/users',
+          method: 'POST',
+          body,
+        })
       })
     })
 
@@ -179,11 +178,12 @@ describe('overrideXHR', () => {
       xhr.open('GET', 'http://example.com/api/users')
       xhr.send()
 
-      await waitFor(10)
+      await vi.waitFor(() => {
+        expect(xhr.readyState).toBe(4)
+      })
 
       expect(status).toBe(200)
       expect(responseText).toBe(JSON.stringify(responseData))
-      expect(xhr.readyState).toBe(4)
     })
 
     it('should fire readystatechange event', async () => {
@@ -205,9 +205,9 @@ describe('overrideXHR', () => {
       xhr.open('GET', 'http://example.com/api/users')
       xhr.send()
 
-      await waitFor(10)
-
-      expect(readyStateChangeFired).toBe(true)
+      await vi.waitFor(() => {
+        expect(readyStateChangeFired).toBe(true)
+      })
     })
 
     it('should fire load event', async () => {
@@ -228,9 +228,9 @@ describe('overrideXHR', () => {
       xhr.open('GET', 'http://example.com/api/users')
       xhr.send()
 
-      await waitFor(10)
-
-      expect(loadEventFired).toBe(true)
+      await vi.waitFor(() => {
+        expect(loadEventFired).toBe(true)
+      })
     })
 
     it('should fire loadend event', async () => {
@@ -251,21 +251,24 @@ describe('overrideXHR', () => {
       xhr.open('GET', 'http://example.com/api/users')
       xhr.send()
 
-      await waitFor(10)
-
-      expect(loadEndEventFired).toBe(true)
+      await vi.waitFor(() => {
+        expect(loadEndEventFired).toBe(true)
+      })
     })
 
     it.skip('should fall back to real request on cache miss', async () => {
-      // Skipping - XHR fallback in jsdom is complex and tested in integration
+      // TODO: Skipped - XHR fallback behavior in jsdom requires complex simulation
+      // This functionality is tested in integration tests with real browser environment
     })
 
     it.skip('should not mock media files', async () => {
-      // Skipping - tested in utils tests
+      // TODO: Skipped - Media file filtering is covered by utils.test.ts (isMedia, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
 
     it.skip('should not mock internal API endpoints', async () => {
-      // Skipping - tested in utils tests
+      // TODO: Skipped - Internal API filtering is covered by utils.test.ts (isApi, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
 
     it('should log cache hit message', async () => {
@@ -280,13 +283,13 @@ describe('overrideXHR', () => {
       xhr.open('GET', 'http://example.com/api/users')
       xhr.send()
 
-      await waitFor(10)
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Serving XHR from cache:'),
-        'GET',
-        'http://example.com/api/users',
-      )
+      await vi.waitFor(() => {
+        expect(consoleLogSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Serving XHR from cache:'),
+          'GET',
+          'http://example.com/api/users',
+        )
+      })
 
       consoleLogSpy.mockRestore()
     })
@@ -298,27 +301,34 @@ describe('overrideXHR', () => {
     })
 
     it.skip('should record successful XHR responses', async () => {
-      // Skipping - complex XHR simulation with jsdom
+      // TODO: Skipped - Recording requires XHR to complete successfully in jsdom
+      // jsdom XHR implementation doesn't support actual network requests
+      // Recommended: Add integration test with real browser or mock XHR readyState changes
     })
 
     it.skip('should not record failed responses', async () => {
-      // Skipping - complex XHR simulation
+      // TODO: Skipped - Testing XHR error states in jsdom is complex
+      // Recommended: Add integration test to verify failed requests aren't cached
     })
 
     it.skip('should serialize FormData body', async () => {
-      // Skipping - tested in utils tests
+      // TODO: Skipped - FormData serialization is covered by utils.test.ts (serializeFormData)
+      // End-to-end XHR+FormData testing recommended for integration suite
     })
 
     it.skip('should not record media files', async () => {
-      // Skipping - tested in utils tests
+      // TODO: Skipped - Media file filtering is covered by utils.test.ts (isMedia, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
 
     it.skip('should not record internal API endpoints', async () => {
-      // Skipping - tested in utils tests
+      // TODO: Skipped - Internal API filtering is covered by utils.test.ts (isApi, isCacheable)
+      // Integration testing recommended for end-to-end verification
     })
 
     it.skip('should handle recording errors gracefully', async () => {
-      // Skipping - complex error handling with jsdom
+      // TODO: Skipped - Error handling with XHR state changes is difficult to simulate in jsdom
+      // Recommended: Add integration test or use Playwright/Cypress for browser testing
     })
   })
 
@@ -364,8 +374,7 @@ describe('overrideXHR', () => {
       xhr.open('POST', 'http://example.com/api/xml')
       xhr.send(doc)
 
-      // Should serialize the document
-      await waitFor(10)
+      // Should serialize the document - no assertions needed for basic smoke test
     })
 
     it('should handle async parameter in open', async () => {
@@ -408,9 +417,10 @@ describe('overrideXHR', () => {
       xhr.open('GET', 'http://example.com/api/users')
       xhr.send()
 
-      await waitFor(10)
+      await vi.waitFor(() => {
+        expect(mockStore.get).toHaveBeenCalled()
+      })
 
-      expect(mockStore.get).toHaveBeenCalled()
       expect(mockStore.set).not.toHaveBeenCalled()
     })
   })
