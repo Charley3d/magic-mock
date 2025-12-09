@@ -47,6 +47,12 @@ export function overrideXHR() {
     const method = (this as MagicMockXHR)._method
     const url = (this as MagicMockXHR)._url
 
+    // If method or URL are not set, fall back to original send
+    // This shouldn't happen in practice since open() must be called before send()
+    if (!method || !url) {
+      return originalSend.call(this, body)
+    }
+
     // Serialize body using shared helper
     const serializedBody = serializeBody(body)
 
