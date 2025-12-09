@@ -35,7 +35,9 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "format": "prettier --write src/",
+    "lint": "eslint . --fix --cache"
   },
   "dependencies": {},
   "devDependencies": {

@@ -137,7 +137,7 @@ export function createMagicMockTestSuite(projectName: string) {
       await setMagicMockMode(page, MagicMockMode.RECORD)
       await selectPokemonCount(page, POKEMON_COUNTS.SMALL)
       await fetchPokemon(page)
-      await verifyPokemonCards(page, 5)
+      await verifyPokemonCards(page, POKEMON_COUNTS.SMALL)
 
       // Step 2: Mock mode - serve from cache
       await setMagicMockMode(page, MagicMockMode.MOCK)
@@ -145,7 +145,7 @@ export function createMagicMockTestSuite(projectName: string) {
 
       await selectPokemonCount(page, POKEMON_COUNTS.SMALL)
       await fetchPokemon(page)
-      await verifyPokemonCards(page, 5)
+      await verifyPokemonCards(page, POKEMON_COUNTS.SMALL)
 
       // In mock mode, no real network requests should be made (served from cache)
       const requestCount = interceptor.getRequestCount()
@@ -160,7 +160,9 @@ export function createMagicMockTestSuite(projectName: string) {
       await clearMagicMockCache(page)
     })
 
-    test('should demonstrate performance improvement from Record to Mock mode', async ({ page }) => {
+    test('should demonstrate performance improvement from Record to Mock mode', async ({
+      page,
+    }) => {
       const initialized = await isMagicMockInitialized(page)
       if (!initialized) {
         test.skip()
@@ -176,7 +178,9 @@ export function createMagicMockTestSuite(projectName: string) {
       const recordTiming = await extractTiming(page)
       const recordTime = recordTiming.totalTime
 
-      console.log(`[${projectName}] Record mode time: ${recordTime}ms (sequential fetching: 10 Pokemon)`)
+      console.log(
+        `[${projectName}] Record mode time: ${recordTime}ms (sequential fetching: 10 Pokemon)`,
+      )
 
       // Step 2: Mock mode - measure time for cached responses
       await setMagicMockMode(page, MagicMockMode.MOCK)

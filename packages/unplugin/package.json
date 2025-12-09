@@ -72,7 +72,9 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src/",
+    "lint": "eslint src/ --fix --cache"
   },
   "dependencies": {
     "@magicmock/core": "workspace:*",

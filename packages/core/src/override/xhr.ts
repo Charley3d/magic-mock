@@ -114,6 +114,7 @@ export function overrideXHR() {
     const recordingHandler = function () {
       // Record response when request is complete
       const safeUrl = getURL(url)
+      console.log(xhr.readyState, isRecording(), isCacheable(safeUrl, method), xhr.status)
       if (
         xhr.readyState === 4 &&
         isRecording() &&
@@ -125,7 +126,7 @@ export function overrideXHR() {
       }
     }
 
-    xhr.addEventListener('readystatechange', recordingHandler, { once: true })
+    xhr.addEventListener('loadend', recordingHandler, { once: true })
 
     return originalSend.call(xhr, originalBody)
   }
@@ -163,7 +164,13 @@ async function tryStoreXHRResponse(url: URL, xhr: XMLHttpRequest, method: string
     statusText: xhr.statusText,
     headers,
   })
-
+  console.log({
+    url: url.href,
+    method,
+    body,
+    data,
+    response: mockResponse,
+  })
   try {
     await store.set(originalFetch, {
       url: url.href,

@@ -177,9 +177,7 @@ const fetchPokemon = async () => {
         <span>Total Time: {{ stats.totalTime }}ms ({{ stats.avgTime }}ms avg per Pokemon)</span>
       </div>
 
-      <div v-if="error" class="error">
-        <strong>Error:</strong> {{ error }}
-      </div>
+      <div v-if="error" class="error"><strong>Error:</strong> {{ error }}</div>
 
       <div v-else class="pokemon-grid">
         <div v-for="pokemon in pokemonList" :key="pokemon.id" class="pokemon-card">
