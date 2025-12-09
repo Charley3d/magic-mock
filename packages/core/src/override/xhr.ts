@@ -10,6 +10,14 @@ import {
 } from '../utils'
 const store = createStore()
 
+/**
+ * Interface for augmented XMLHttpRequest with Magic Mock metadata
+ */
+interface MagicMockXHR extends XMLHttpRequest {
+  _method?: string
+  _url?: string | URL
+}
+
 export function overrideXHR() {
   // Store original methods
 
@@ -17,13 +25,6 @@ export function overrideXHR() {
   const originalOpen = originalXMLHttpRequest.prototype.open
   // eslint-disable-next-line
   const originalSend = originalXMLHttpRequest.prototype.send
-
-  // const originalSend = function (
-  //   this: XMLHttpRequest,
-  //   ...args: Parameters<XMLHttpRequest['send']>
-  // ) {
-  //   originalXMLHttpRequest.prototype.send.apply(this, args)
-  // }
 
   // Override open to capture method and URL
   originalXMLHttpRequest.prototype.open = function (
@@ -34,8 +35,8 @@ export function overrideXHR() {
     password?: string | null,
   ) {
     // Store method and URL on the instance for later use in send
-    ;(this as unknown as Record<string, string>)._method = method
-    ;(this as unknown as Record<string, string | URL>)._url = url
+    ;(this as MagicMockXHR)._method = method
+    ;(this as MagicMockXHR)._url = url
     return originalOpen.call(this, method, url, async, user, password)
   }
 
@@ -43,8 +44,8 @@ export function overrideXHR() {
   originalXMLHttpRequest.prototype.send = function (
     body?: Document | XMLHttpRequestBodyInit | null,
   ) {
-    const method = (this as unknown as Record<string, string>)._method
-    const url = (this as unknown as Record<string, string | URL>)._url
+    const method = (this as MagicMockXHR)._method
+    const url = (this as MagicMockXHR)._url
 
     // Serialize body using shared helper
     const serializedBody = serializeBody(body)

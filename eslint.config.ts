@@ -1,7 +1,6 @@
 import prettier from 'eslint-config-prettier'
 import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
-var t = 'ok'
 
 export default defineConfig(
   // Ignore patterns
