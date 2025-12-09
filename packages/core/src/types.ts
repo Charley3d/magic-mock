@@ -5,7 +5,7 @@ export interface CachedRequest {
   url: string
   method: string
   body?: string
-  response: any
+  response: unknown
   status: number
   headers: Record<string, string>
 }

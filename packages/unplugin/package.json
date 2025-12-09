@@ -72,11 +72,17 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src/",
+    "lint": "eslint src/ --fix --cache"
   },
   "dependencies": {
     "@magicmock/core": "workspace:*",
-    "unplugin": "^2.3.11"
+    "unplugin": "^2.3.11",
+    "eslint": "workspace:*",
+    "prettier": "workspace:*",
+    "eslint-config-prettier": "workspace:*",
+    "typescript-eslint": "workspace:*"
   },
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0",

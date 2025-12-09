@@ -1,10 +1,9 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { overrideXHR } from '../../src/override/xhr'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createMockResponse,
-  enableRecordingMode,
-  enableMockingMode,
   disableAllModes,
+  enableMockingMode,
+  enableRecordingMode,
 } from '../test-utils'
 
 // Mock the store module

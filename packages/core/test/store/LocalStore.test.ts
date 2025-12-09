@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocalStore } from '../../src/store/LocalStore'
-import { createMockResponse, createMockFile } from '../test-utils'
+import { createMockResponse } from '../test-utils'
 
 describe('LocalStore', () => {
   let store: LocalStore
@@ -313,38 +313,35 @@ describe('LocalStore', () => {
       expect(retrieved.headers.get('x-custom')).toBe('value')
     })
 
-    it(
-      'should apply delay for file uploads',
-      async () => {
-        const url = 'http://example.com/api/upload'
-        const method = 'POST'
-        const fileMetadata = {
-          file: {
-            _file: true,
-            name: 'test.txt',
-            size: 10485760, // 10MB
-            type: 'text/plain',
-          },
-        }
-        const body = JSON.stringify(fileMetadata)
-        const data = { success: true }
-        const response = createMockResponse(data)
+    // TODO: This is odd, it does not really control delay. Rework this into a fiable test
+    it('should apply delay for file uploads', async () => {
+      const url = 'http://example.com/api/upload'
+      const method = 'POST'
+      const fileMetadata = {
+        file: {
+          _file: true,
+          name: 'test.txt',
+          size: 10485760, // 10MB
+          type: 'text/plain',
+        },
+      }
+      const body = JSON.stringify(fileMetadata)
+      const data = { success: true }
+      const response = createMockResponse(data)
 
-        await store.set(mockFetch, { url, method, body, data, response })
+      await store.set(mockFetch, { url, method, body, data, response })
 
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-        await store.get(mockFetch, { url, method, body })
+      await store.get(mockFetch, { url, method, body })
 
-        // Check the log was called with delay message
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          expect.stringMatching(/Simulating upload delay: \d+ms/),
-        )
+      // Check the log was called with delay message
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/Simulating upload delay: \d+ms/),
+      )
 
-        consoleLogSpy.mockRestore()
-      },
-      15000,
-    ) // 15 second timeout for delay test
+      consoleLogSpy.mockRestore()
+    }, 15000) // 15 second timeout for delay test
 
     it('should not apply delay for non-file requests', async () => {
       const url = 'http://example.com/api/users'

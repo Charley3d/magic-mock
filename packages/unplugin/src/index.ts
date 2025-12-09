@@ -1,15 +1,11 @@
 import fs from 'fs'
 import type HtmlWebpackPlugin from 'html-webpack-plugin'
 import { createRequire } from 'node:module'
-import { dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import path from 'path'
 import type { UnpluginFactory } from 'unplugin'
 import { createUnplugin } from 'unplugin'
 import type { ViteDevServer } from 'vite'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
 const require = createRequire(import.meta.url)
 
 export interface MagicMockOptions {
@@ -34,7 +30,7 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
 
     // Vite-specific hooks
     vite: {
-      async buildStart() {
+      buildStart() {
         // Ensure cache directory exists
         if (!fs.existsSync(cacheDir)) {
           fs.mkdirSync(cacheDir, { recursive: true })
@@ -49,21 +45,33 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
         }
 
         // Endpoint to record requests
-        server.middlewares.use('/api/__record', async (req, res) => {
+        server.middlewares.use('/api/__record', (req, res) => {
           if (req.method === 'POST') {
             let body = ''
             req.on('data', (chunk) => (body += chunk))
             req.on('end', () => {
-              const { url, method, body: requestBody, response, status, headers } = JSON.parse(body)
+              const {
+                url,
+                method,
+                body: requestBody,
+                response,
+                status,
+                headers,
+              } = JSON.parse(body) as Record<string, unknown> //TODO: Create a dedicated interface
 
               // Generate filename based on method + URL + body
-              const cacheKey = `${method}:${url}${requestBody ? ':' + requestBody : ''}`
-              const filename = Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
+              const cacheKey = `${method as string}:${url as string}${requestBody ? ':' + (requestBody as string) : ''}`
+              const filename =
+                Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
               const filepath = path.join(cacheDir, filename)
 
               fs.writeFileSync(
                 filepath,
-                JSON.stringify({ url, method, body: requestBody, response, status, headers }, null, 2),
+                JSON.stringify(
+                  { url, method, body: requestBody, response, status, headers },
+                  null,
+                  2,
+                ),
               )
               res.writeHead(200, { 'Content-Type': 'application/json' })
               res.end(JSON.stringify({ success: true }))
@@ -87,11 +95,15 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
 
             // Generate filename based on method + URL + body (same as recording)
             const cacheKey = `${method}:${url}${body ? ':' + body : ''}`
-            const filename = Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
+            const filename =
+              Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
             const filepath = path.join(cacheDir, filename)
 
             if (fs.existsSync(filepath)) {
-              const cached = JSON.parse(fs.readFileSync(filepath, 'utf-8'))
+              const cached = JSON.parse(fs.readFileSync(filepath, 'utf-8')) as Record<
+                string,
+                unknown
+              > // TODO: Create a dedicated interface
               res.writeHead(200, { 'Content-Type': 'application/json' })
               res.end(JSON.stringify(cached))
             } else {
@@ -130,7 +142,7 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
       console.log('🚀 Magic Mock Webpack plugin loaded!')
 
       // Ensure cache directory exists
-      compiler.hooks.beforeRun.tapAsync('magic-mock', (compilation, callback) => {
+      compiler.hooks.beforeRun.tapAsync('magic-mock', (_, callback) => {
         if (!fs.existsSync(cacheDir)) {
           fs.mkdirSync(cacheDir, { recursive: true })
         }

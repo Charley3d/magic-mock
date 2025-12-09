@@ -25,8 +25,8 @@ export class RemoteStore implements Store {
     if (!cacheResponse.ok) {
       throw new Error('Cache not found')
     }
-
-    const cached = await cacheResponse.json()
+    // TODO: Should narrow this type assertion
+    const cached = (await cacheResponse.json()) as Record<string, unknown>
     console.log('🔄 Serving from cache:', method, url)
 
     // Apply fake delay if file metadata detected
@@ -40,12 +40,15 @@ export class RemoteStore implements Store {
 
     // Return native Response instead of MSW HttpResponse
     if (typeof cached.response === 'string') {
-      return new Response(cached.response, { status: cached.status, headers: cached.headers })
+      return new Response(cached.response, {
+        status: cached.status as number | undefined,
+        headers: cached.headers as HeadersInit | undefined,
+      })
     }
 
     return new Response(JSON.stringify(cached.response), {
-      status: cached.status,
-      headers: cached.headers,
+      status: cached.status as number | undefined,
+      headers: cached.headers as HeadersInit | undefined,
     })
   }
 

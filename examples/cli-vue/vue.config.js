@@ -1,5 +1,4 @@
 const MagicMock = require('@magicmock/unplugin/webpack')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { defineConfig } = require('@vue/cli-service')
 const fs = require('fs')
 const path = require('path')

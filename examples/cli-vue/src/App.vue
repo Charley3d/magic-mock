@@ -1,161 +1,320 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 
-const pokemon = ref(null)
+// List of random Pokemon names to fetch
+const POKEMON_NAMES = [
+  'pikachu',
+  'charizard',
+  'bulbasaur',
+  'squirtle',
+  'mewtwo',
+  'eevee',
+  'snorlax',
+  'dragonite',
+  'gengar',
+  'gyarados',
+  'lapras',
+  'vaporeon',
+  'jolteon',
+  'flareon',
+  'mew',
+  'articuno',
+  'zapdos',
+  'moltres',
+  'ditto',
+  'meowth',
+  'psyduck',
+  'jigglypuff',
+  'alakazam',
+  'machamp',
+  'golem',
+  'slowpoke',
+  'magneton',
+  'farfetchd',
+  'dodrio',
+  'dewgong',
+  'muk',
+  'cloyster',
+  'haunter',
+  'onix',
+  'hypno',
+  'kingler',
+  'electrode',
+  'exeggutor',
+  'marowak',
+  'hitmonlee',
+  'hitmonchan',
+  'lickitung',
+  'weezing',
+  'rhydon',
+  'chansey',
+  'tangela',
+  'kangaskhan',
+  'seadra',
+  'seaking',
+  'starmie',
+  'scyther',
+]
+
+const pokemonList = ref([])
 const loading = ref(false)
 const error = ref(null)
+const pokemonCount = ref(5)
+const stats = ref({ count: 0, totalTime: 0, avgTime: 0 })
+const showResult = ref(false)
+
+const getTypeColor = (type) => {
+  const colors = {
+    normal: '#A8A878',
+    fire: '#F08030',
+    water: '#6890F0',
+    electric: '#F8D030',
+    grass: '#78C850',
+    ice: '#98D8D8',
+    fighting: '#C03028',
+    poison: '#A040A0',
+    ground: '#E0C068',
+    flying: '#A890F0',
+    psychic: '#F85888',
+    bug: '#A8B820',
+    rock: '#B8A038',
+    ghost: '#705898',
+    dragon: '#7038F8',
+    dark: '#705848',
+    steel: '#B8B8D0',
+    fairy: '#EE99AC',
+  }
+  return colors[type] || '#888'
+}
 
 const fetchPokemon = async () => {
+  const startTime = performance.now()
+
+  // Disable controls during request
   loading.value = true
   error.value = null
 
+  // Clear previous results
+  showResult.value = false
+  pokemonList.value = []
+
+  const count = pokemonCount.value
+  const selectedPokemon = POKEMON_NAMES.slice(0, count)
+
   try {
-    const response = await fetch('https://pokeapi.co/api/v2/pokemon/pikachu')
-    if (!response.ok) throw new Error('Failed to fetch')
-    pokemon.value = await response.json()
+    // Fetch Pokemon sequentially (one at a time) to demonstrate dramatic performance difference
+    // Recording mode: ~200ms per Pokemon × 50 = ~10 seconds
+    // Mocking mode: ~2ms per Pokemon × 50 = ~100ms
+    const results = []
+    for (const name of selectedPokemon) {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+      if (!res.ok) throw new Error('Failed to fetch')
+      const pokemon = await res.json()
+      results.push(pokemon)
+
+      // Progressive UI update: show Pokemon as they load
+      pokemonList.value = [...results]
+    }
+
+    const endTime = performance.now()
+    const totalTime = Math.round(endTime - startTime)
+
+    // Display stats
+    stats.value = {
+      count: results.length,
+      totalTime,
+      avgTime: Math.round(totalTime / results.length),
+    }
+    showResult.value = true
   } catch (e) {
+    const endTime = performance.now()
+    const totalTime = Math.round(endTime - startTime)
+
+    stats.value = {
+      count: 0,
+      totalTime,
+      avgTime: 0,
+    }
     error.value = e.message
+    showResult.value = true
   } finally {
+    // Re-enable controls
     loading.value = false
   }
 }
-
-onMounted(() => {
-  fetchPokemon()
-})
 </script>
 
 <template>
   <div class="app">
-    <h1>🎩 Magic Mock - Webpack Demo</h1>
+    <h1>Magic Mock - Pokemon Explorer</h1>
+    <p>Select how many Pokemon to fetch and see the magic-mock performance difference!</p>
 
-    <div class="instructions">
-      <p><strong>How to use:</strong></p>
-      <ol>
-        <li>Click <strong>⏺ Record</strong> in the top-right corner</li>
-        <li>The request will be made and cached</li>
-        <li>Click <strong>🔄 Mock</strong> to serve from cache</li>
-        <li>Reload the page - instant response!</li>
-      </ol>
+    <div class="controls">
+      <label for="pokemonCount">Number of Pokemon:</label>
+      <select id="pokemonCount" v-model.number="pokemonCount" :disabled="loading">
+        <option :value="1">1</option>
+        <option :value="5">5</option>
+        <option :value="10">10</option>
+        <option :value="25">25</option>
+        <option :value="50">50</option>
+      </select>
+      <button @click="fetchPokemon" :disabled="loading">
+        {{ loading ? 'Fetching...' : 'Fetch Pokemon' }}
+      </button>
     </div>
 
-    <div class="demo">
-      <button @click="fetchPokemon" :disabled="loading">
-        {{ loading ? 'Loading...' : 'Fetch Pokemon' }}
-      </button>
+    <div v-if="showResult" class="result">
+      <div class="stats">
+        <span>Pokemon Loaded: {{ stats.count }}</span>
+        <span>Total Time: {{ stats.totalTime }}ms ({{ stats.avgTime }}ms avg per Pokemon)</span>
+      </div>
 
-      <div v-if="error" class="error">❌ Error: {{ error }}</div>
+      <div v-if="error" class="error">
+        <strong>Error:</strong> {{ error }}
+      </div>
 
-      <div v-if="pokemon" class="pokemon">
-        <img :src="pokemon.sprites.front_default" :alt="pokemon.name" />
-        <h2>{{ pokemon.name }}</h2>
-        <div class="types">
-          <span v-for="type in pokemon.types" :key="type.type.name" class="type">
-            {{ type.type.name }}
-          </span>
+      <div v-else class="pokemon-grid">
+        <div v-for="pokemon in pokemonList" :key="pokemon.id" class="pokemon-card">
+          <img :src="pokemon.sprites.front_default" :alt="pokemon.name" />
+          <div class="pokemon-name">{{ pokemon.name }}</div>
+          <div class="pokemon-types">
+            <span
+              v-for="type in pokemon.types"
+              :key="type.type.name"
+              class="type-badge"
+              :style="{ backgroundColor: getTypeColor(type.type.name) }"
+            >
+              {{ type.type.name }}
+            </span>
+          </div>
+          <div style="margin-top: 8px; font-size: 14px; color: #666">
+            Height: {{ pokemon.height }} | Weight: {{ pokemon.weight }}
+          </div>
         </div>
       </div>
-    </div>
-
-    <div class="footer">
-      <p>Open DevTools Console to see cache logs</p>
     </div>
   </div>
 </template>
 
 <style scoped>
 .app {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-h1 {
+  font-family: Arial, sans-serif;
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 20px;
   text-align: center;
-  color: #42b883;
 }
 
-.instructions {
-  background: #f5f5f5;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0;
 }
 
-.instructions ol {
-  margin: 0.5rem 0 0;
-  padding-left: 1.5rem;
+label {
+  font-size: 16px;
+  font-weight: bold;
 }
 
-.demo {
-  text-align: center;
+select {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: 2px solid #0066cc;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
 }
 
 button {
-  background: #42b883;
+  background-color: #0066cc;
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: 15px 30px;
+  font-size: 16px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
 button:hover:not(:disabled) {
-  background: #35a372;
+  background-color: #0052a3;
 }
 
 button:disabled {
-  opacity: 0.5;
+  background-color: #ccc;
   cursor: not-allowed;
 }
 
-.error {
-  color: #d32f2f;
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #ffebee;
-  border-radius: 4px;
+.result {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  text-align: left;
 }
 
-.pokemon {
-  margin-top: 2rem;
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.pokemon img {
-  width: 150px;
-  height: 150px;
-}
-
-.pokemon h2 {
-  margin: 0.5rem 0;
-  text-transform: capitalize;
-}
-
-.types {
+.stats {
+  font-weight: bold;
+  color: #0066cc;
+  margin-bottom: 20px;
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-top: 1rem;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #0066cc;
 }
 
-.type {
-  background: #eeeeee;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  text-transform: capitalize;
+.pokemon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
-.footer {
-  margin-top: 2rem;
+.pokemon-card {
+  padding: 15px;
+  border: 2px solid #0066cc;
+  border-radius: 8px;
+  background-color: #fff;
   text-align: center;
-  color: #666;
-  font-size: 0.875rem;
+}
+
+.pokemon-card img {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 10px;
+}
+
+.pokemon-name {
+  font-weight: bold;
+  font-size: 18px;
+  text-transform: capitalize;
+  margin-bottom: 5px;
+}
+
+.pokemon-types {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.type-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  background-color: #888;
+}
+
+.error {
+  color: #cc0000;
+  padding: 15px;
+  border: 2px solid #cc0000;
+  border-radius: 5px;
+  background-color: #ffe6e6;
 }
 </style>
