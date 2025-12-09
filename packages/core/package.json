@@ -1,6 +1,6 @@
 {
   "name": "@magicmock/core",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Core functionality for Magic Mock - HTTP request recording and replay",
   "author": "Charley <charley.makevideo@gmail.com>",
   "license": "MIT",
@@ -46,11 +46,7 @@
     "jsdom": "^25.0.1",
     "tsdown": "^0.16.6",
     "typescript": "~5.9.0",
-    "vitest": "^2.1.8",
-    "eslint": "workspace:*",
-    "prettier": "workspace:*",
-    "eslint-config-prettier": "workspace:*",
-    "typescript-eslint": "workspace:*"
+    "vitest": "^2.1.8"
   },
   "repository": {
     "type": "git",

@@ -1,5 +1,11 @@
 # @magicmock/core
 
+## 0.7.0
+
+### Minor Changes
+
+- 3097af2: Comprehensive testing infrastructure and code quality improvements
+
 ## 0.6.0
 
 ### Minor Changes

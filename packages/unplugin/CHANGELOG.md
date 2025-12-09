@@ -1,5 +1,16 @@
 # @magicmock/unplugin
 
+## 0.6.0
+
+### Minor Changes
+
+- 3097af2: Comprehensive testing infrastructure and code quality improvements
+
+### Patch Changes
+
+- Updated dependencies [3097af2]
+  - @magicmock/core@0.7.0
+
 ## 0.5.1
 
 ### Patch Changes

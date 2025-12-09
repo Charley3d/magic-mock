@@ -1,5 +1,11 @@
 # cli-vue
 
+## 0.3.0
+
+### Minor Changes
+
+- 3097af2: Comprehensive testing infrastructure and code quality improvements
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@magicmock/unplugin",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Universal plugin for Magic Mock - works with Vite, Webpack, Rollup, and esbuild",
   "author": "Charley <charley.makevideo@gmail.com>",
   "license": "MIT",
@@ -78,11 +78,7 @@
   },
   "dependencies": {
     "@magicmock/core": "workspace:*",
-    "unplugin": "^2.3.11",
-    "eslint": "workspace:*",
-    "prettier": "workspace:*",
-    "eslint-config-prettier": "workspace:*",
-    "typescript-eslint": "workspace:*"
+    "unplugin": "^2.3.11"
   },
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0",
