@@ -218,14 +218,6 @@ export async function verifyPokemonNames(page: Page, expectedCount: number) {
   }
 }
 
-/**
- * Helper to clear localStorage (useful for testing different Magic Mock modes)
- */
-export async function clearMagicMockCache(page: Page) {
-  await page.evaluate(() => {
-    localStorage.clear()
-  })
-}
 
 /**
  * Helper to verify type badges are colored correctly
@@ -256,17 +248,7 @@ export async function verifyImagesLoaded(page: Page, expectedCount: number) {
 
   for (let i = 0; i < expectedCount; i++) {
     const img = images.nth(i)
-
-    // Wait for image to be visible
     await expect(img).toBeVisible()
-
-    // Verify image has loaded by checking naturalWidth
-
-    const isLoaded = await img.evaluate((imgEl) => {
-      const image = imgEl as HTMLImageElement
-      return image.complete && image.naturalWidth > 0
-    })
-
     await expectImageToBeLoaded(img)
   }
 }

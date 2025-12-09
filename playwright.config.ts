@@ -39,12 +39,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         baseURL: 'http://localhost:3001',
       },
-      // Use webServer to start a simple HTTP server for standalone examples
-      // webServer: {
-      //   command: 'cd examples/simple-axios && npx http-server -p 3001 --silent',
-      //   port: 3001,
-      //   reuseExistingServer: !process.env.CI,
-      // },
     },
 
     {
@@ -54,11 +48,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         baseURL: 'http://localhost:3002',
       },
-      // webServer: {
-      //   command: 'cd examples/simple-jquery && npx http-server -p 3002 --silent',
-      //   port: 3002,
-      //   reuseExistingServer: !process.env.CI,
-      // },
     },
 
     {
@@ -67,12 +56,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         baseURL: 'http://localhost:8080',
-      },
-      webServer: {
-        // command: 'cd examples/cli-vue && pnpm serve',
-        // port: 8080,
-        // reuseExistingServer: !process.env.CI,
-        // timeout: 120000, // Vue CLI can take longer to start
       },
     },
 
@@ -83,11 +66,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         baseURL: 'http://localhost:5173',
       },
-      // webServer: {
-      //   command: 'cd examples/vite-vue && pnpm dev',
-      //   port: 5173,
-      //   reuseExistingServer: !process.env.CI,
-      // },
     },
   ],
   webServer: [

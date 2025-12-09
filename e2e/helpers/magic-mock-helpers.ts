@@ -30,15 +30,11 @@ export enum MagicMockMode {
  * This validates that Magic Mock has been properly initialized
  */
 export async function isMagicMockInitialized(page: Page): Promise<boolean> {
-  try {
-    // Check if both Magic Mock buttons are present
-    const recordButton = await page.locator(MAGIC_MOCK_SELECTORS.recordButton).count();
-    const mockButton = await page.locator(MAGIC_MOCK_SELECTORS.mockButton).count();
+  // Check if both Magic Mock buttons are present
+  const recordButton = await page.locator(MAGIC_MOCK_SELECTORS.recordButton).count();
+  const mockButton = await page.locator(MAGIC_MOCK_SELECTORS.mockButton).count();
 
-    return recordButton > 0 && mockButton > 0;
-  } catch {
-    return false;
-  }
+  return recordButton > 0 && mockButton > 0;
 }
 
 /**
@@ -66,11 +62,16 @@ export async function setMagicMockMode(page: Page, mode: MagicMockMode) {
       // Want: recording ON, mocking OFF
       if (!isCurrentlyRecording) {
         await recordButton.click();
-        await page.waitForTimeout(100);
+        // Wait for localStorage to update instead of fixed timeout
+        await expect.poll(async () =>
+          await page.evaluate(() => localStorage.getItem('magic-mock-recording'))
+        ).toBe('true');
       }
       if (isCurrentlyMocking) {
         await mockButton.click();
-        await page.waitForTimeout(100);
+        await expect.poll(async () =>
+          await page.evaluate(() => localStorage.getItem('magic-mock-mocking'))
+        ).toBe('false');
       }
       break;
 
@@ -78,11 +79,15 @@ export async function setMagicMockMode(page: Page, mode: MagicMockMode) {
       // Want: mocking ON, recording OFF
       if (!isCurrentlyMocking) {
         await mockButton.click();
-        await page.waitForTimeout(100);
+        await expect.poll(async () =>
+          await page.evaluate(() => localStorage.getItem('magic-mock-mocking'))
+        ).toBe('true');
       }
       if (isCurrentlyRecording) {
         await recordButton.click();
-        await page.waitForTimeout(100);
+        await expect.poll(async () =>
+          await page.evaluate(() => localStorage.getItem('magic-mock-recording'))
+        ).toBe('false');
       }
       break;
 
@@ -90,17 +95,18 @@ export async function setMagicMockMode(page: Page, mode: MagicMockMode) {
       // Want: both OFF
       if (isCurrentlyRecording) {
         await recordButton.click();
-        await page.waitForTimeout(100);
+        await expect.poll(async () =>
+          await page.evaluate(() => localStorage.getItem('magic-mock-recording'))
+        ).toBe('false');
       }
       if (isCurrentlyMocking) {
         await mockButton.click();
-        await page.waitForTimeout(100);
+        await expect.poll(async () =>
+          await page.evaluate(() => localStorage.getItem('magic-mock-mocking'))
+        ).toBe('false');
       }
       break;
   }
-
-  // Final wait for state to settle
-  await page.waitForTimeout(200);
 }
 
 /**
@@ -157,13 +163,18 @@ export async function getCachedRequestCount(page: Page): Promise<number> {
 }
 
 /**
- * Helper to intercept and count network requests
+ * Network interceptor type for tracking HTTP requests
  */
-export async function setupNetworkInterceptor(page: Page): Promise<{
+export type NetworkInterceptor = {
   getRequestCount: () => number;
   getRequests: () => string[];
   reset: () => void;
-}> {
+};
+
+/**
+ * Helper to intercept and count network requests
+ */
+export async function setupNetworkInterceptor(page: Page): Promise<NetworkInterceptor> {
   const requests: string[] = [];
 
   page.on('request', (request) => {
@@ -197,7 +208,7 @@ export async function verifyRequestsAreMocked(actualTime: number, recordTime: nu
 /**
  * Helper to verify that requests are hitting the real API (recording)
  */
-export async function verifyRequestsAreReal(networkInterceptor: ReturnType<typeof setupNetworkInterceptor> extends Promise<infer T> ? T : never, expectedCount: number) {
+export async function verifyRequestsAreReal(networkInterceptor: NetworkInterceptor, expectedCount: number) {
   const actualCount = networkInterceptor.getRequestCount();
   expect(actualCount).toBe(expectedCount);
 
