@@ -58,12 +58,17 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
 
               // Generate filename based on method + URL + body
               const cacheKey = `${method}:${url}${requestBody ? ':' + requestBody : ''}`
-              const filename = Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
+              const filename =
+                Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
               const filepath = path.join(cacheDir, filename)
 
               fs.writeFileSync(
                 filepath,
-                JSON.stringify({ url, method, body: requestBody, response, status, headers }, null, 2),
+                JSON.stringify(
+                  { url, method, body: requestBody, response, status, headers },
+                  null,
+                  2,
+                ),
               )
               res.writeHead(200, { 'Content-Type': 'application/json' })
               res.end(JSON.stringify({ success: true }))
@@ -87,7 +92,8 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
 
             // Generate filename based on method + URL + body (same as recording)
             const cacheKey = `${method}:${url}${body ? ':' + body : ''}`
-            const filename = Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
+            const filename =
+              Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
             const filepath = path.join(cacheDir, filename)
 
             if (fs.existsSync(filepath)) {

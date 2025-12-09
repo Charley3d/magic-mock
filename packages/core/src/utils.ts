@@ -5,10 +5,7 @@ import { StoredMedia } from './types'
  * Uses URL-safe base64 variant: / -> _ and + -> - , removes padding =
  */
 export function urlToFilename(url: string): string {
-  const base64 = btoa(url)
-    .replace(/\//g, '_')
-    .replace(/\+/g, '-')
-    .replace(/=/g, '')
+  const base64 = btoa(url).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '')
   return base64 + '.json'
 }
 
