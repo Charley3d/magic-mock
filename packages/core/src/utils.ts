@@ -62,7 +62,7 @@ export const generateCacheKey = (method: string, url: string, body?: string): st
  * Serialize FormData to JSON with file metadata
  */
 export const serializeFormData = (formData: FormData): string => {
-  const serialized: Record<string, unknown | StoredMedia> = {}
+  const serialized: Record<string, unknown> = {}
   for (const [key, value] of formData.entries()) {
     if (typeof value !== 'string') {
       ;(serialized[key] as StoredMedia) = {
@@ -86,7 +86,7 @@ export const serializeFormData = (formData: FormData): string => {
  */
 export const calculateFileDelay = (body: string, uploadSpeed: number = 1048576): number => {
   try {
-    const parsed = JSON.parse(body)
+    const parsed = JSON.parse(body) as Record<string, unknown>
     let totalSize = 0
 
     // Type guard for StoredMedia
@@ -127,13 +127,13 @@ export const calculateFileDelay = (body: string, uploadSpeed: number = 1048576):
  * Shared helper: Serialize request body to string for caching
  * Supports FormData (with file metadata), Document (XML), and generic bodies
  */
-export function serializeBody(body: any): string | undefined {
+export function serializeBody(body: unknown): string | undefined {
   if (!body) return undefined
   if (body instanceof FormData) return serializeFormData(body)
   if (body instanceof Document) return new XMLSerializer().serializeToString(body)
   if (typeof body === 'string') return body
   // Handle Blob, ArrayBuffer, etc. by converting to string
-  return String(body)
+  return String(body as unknown)
 }
 
 /**

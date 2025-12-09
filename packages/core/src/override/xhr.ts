@@ -12,8 +12,18 @@ const store = createStore()
 
 export function overrideXHR() {
   // Store original methods
+
+  // eslint-disable-next-line
   const originalOpen = originalXMLHttpRequest.prototype.open
+  // eslint-disable-next-line
   const originalSend = originalXMLHttpRequest.prototype.send
+
+  // const originalSend = function (
+  //   this: XMLHttpRequest,
+  //   ...args: Parameters<XMLHttpRequest['send']>
+  // ) {
+  //   originalXMLHttpRequest.prototype.send.apply(this, args)
+  // }
 
   // Override open to capture method and URL
   originalXMLHttpRequest.prototype.open = function (
@@ -24,8 +34,8 @@ export function overrideXHR() {
     password?: string | null,
   ) {
     // Store method and URL on the instance for later use in send
-    ;(this as any)._method = method
-    ;(this as any)._url = url
+    ;(this as unknown as Record<string, string>)._method = method
+    ;(this as unknown as Record<string, string | URL>)._url = url
     return originalOpen.call(this, method, url, async, user, password)
   }
 
@@ -33,9 +43,8 @@ export function overrideXHR() {
   originalXMLHttpRequest.prototype.send = function (
     body?: Document | XMLHttpRequestBodyInit | null,
   ) {
-    const xhr = this
-    const method = (xhr as any)._method
-    const url = (xhr as any)._url
+    const method = (this as unknown as Record<string, string>)._method
+    const url = (this as unknown as Record<string, string | URL>)._url
 
     // Serialize body using shared helper
     const serializedBody = serializeBody(body)
@@ -58,28 +67,28 @@ export function overrideXHR() {
           const statusText = cachedResponse.statusText
 
           // Manually set XHR properties to simulate response
-          Reflect.defineProperty(xhr, 'responseText', {
+          Reflect.defineProperty(this, 'responseText', {
             writable: true,
             value: responseText,
           })
-          Reflect.defineProperty(xhr, 'response', {
+          Reflect.defineProperty(this, 'response', {
             writable: true,
             value: responseText,
           })
-          Reflect.defineProperty(xhr, 'status', { writable: true, value: status })
-          Reflect.defineProperty(xhr, 'statusText', { writable: true, value: statusText })
-          Reflect.defineProperty(xhr, 'readyState', { writable: true, value: 4 })
+          Reflect.defineProperty(this, 'status', { writable: true, value: status })
+          Reflect.defineProperty(this, 'statusText', { writable: true, value: statusText })
+          Reflect.defineProperty(this, 'readyState', { writable: true, value: 4 })
 
           const rsEvent = new Event('readystatechange')
 
-          xhr.dispatchEvent(rsEvent)
+          this.dispatchEvent(rsEvent)
 
           const loadEvent = new ProgressEvent('load', {
             lengthComputable: true,
             loaded: responseText.length,
             total: responseText.length,
           })
-          xhr.dispatchEvent(loadEvent)
+          this.dispatchEvent(loadEvent)
 
           // loadend
           const loadEndEvent = new ProgressEvent('loadend', {
@@ -87,12 +96,12 @@ export function overrideXHR() {
             loaded: responseText.length,
             total: responseText.length,
           })
-          xhr.dispatchEvent(loadEndEvent)
+          this.dispatchEvent(loadEndEvent)
         })
         .catch(() => {
           console.log('❌ XHR Cache miss:', method, url)
           // Cache miss - fall through to real XHR
-          sendRealXHR(xhr, method, url, serializedBody, body)
+          sendRealXHR(this, method, url, serializedBody, body)
         })
 
       // Return immediately - we've handled it async
@@ -100,7 +109,7 @@ export function overrideXHR() {
     }
 
     // Not mocking or not eligible for caching - send real request
-    sendRealXHR(xhr, method, url, serializedBody, body)
+    sendRealXHR(this, method, url, serializedBody, body)
   }
 
   // Helper function to send real XHR and record if needed
@@ -122,7 +131,9 @@ export function overrideXHR() {
         xhr.status >= 200 &&
         xhr.status < 300
       ) {
-        tryStoreXHRResponse(safeUrl!, xhr, method, serializedBody)
+        tryStoreXHRResponse(safeUrl!, xhr, method, serializedBody).catch((e: unknown) => {
+          console.error(e)
+        })
       }
     }
 
@@ -138,7 +149,7 @@ async function tryStoreXHRResponse(url: URL, xhr: XMLHttpRequest, method: string
   let data: string | Record<string, unknown>
   if (contentType?.includes('application/json')) {
     try {
-      data = JSON.parse(xhr.responseText)
+      data = JSON.parse(xhr.responseText) as Record<string, unknown>
     } catch {
       data = xhr.responseText
     }

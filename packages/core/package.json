@@ -46,7 +46,11 @@
     "jsdom": "^25.0.1",
     "tsdown": "^0.16.6",
     "typescript": "~5.9.0",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "eslint": "workspace:*",
+    "prettier": "workspace:*",
+    "eslint-config-prettier": "workspace:*",
+    "typescript-eslint": "workspace:*"
   },
   "repository": {
     "type": "git",

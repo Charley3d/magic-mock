@@ -56,7 +56,7 @@ async function tryGetCachedResponse(
       method,
       body,
     })
-  } catch (e) {
+  } catch {
     console.log('❌ Cache miss:', method, url!.href)
     return null
   }
@@ -68,7 +68,7 @@ async function tryStoreResponse(url: URL, response: Response, method: string, bo
 
   let data: string | Record<string, unknown>
   if (contentType?.includes('application/json')) {
-    data = await clone.json()
+    data = (await clone.json()) as Record<string, unknown>
   } else {
     data = await clone.text()
   }

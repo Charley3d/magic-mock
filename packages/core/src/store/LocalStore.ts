@@ -43,6 +43,7 @@ export class LocalStore implements Store {
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async set(
     _: typeof window.fetch,
     options: {
