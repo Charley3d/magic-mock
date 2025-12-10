@@ -27,7 +27,9 @@ jobs:
       id-token: write # Needed for npm provenance (trusted publishing)
 
     # Only run if the push is not from the github-actions bot (prevents infinite loops)
-    if: "!contains(github.event.head_commit.message, 'ci: version packages') && github.event.pusher.name != 'github-actions[bot]'"
+    if: >
+      !contains(github.event.head_commit.message, 'ci: version packages') &&
+      github.actor != 'github-actions[bot]'
 
     steps:
       # Step 1: Checkout the repository
