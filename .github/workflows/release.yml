@@ -9,7 +9,13 @@ name: Release
 on:
   push:
     branches:
-      - master
+      - chore-add-ci
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Skip actual publishing'
+        type: boolean
+        default: false
 
 # Prevent concurrent releases to avoid race conditions
 concurrency:
@@ -20,6 +26,8 @@ jobs:
   release:
     name: Release and Publish
     runs-on: ubuntu-latest
+    env:
+      DRY_RUN: ${{ inputs.dry-run || false }}
 
     # Required permissions for the workflow
     permissions:
@@ -32,6 +40,10 @@ jobs:
       github.actor != 'github-actions[bot]'
 
     steps:
+      # Step 0: Dry run check
+      - name: Dry run - skipping publish
+        if: env.DRY_RUN == 'true'
+        run: echo "🧪 Dry run mode - skipping publish and release steps"
       # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -72,7 +84,7 @@ jobs:
 
       # Step 8: Create version PR or publish (only if changesets exist)
       - name: Create Release Pull Request or Publish
-        if: steps.check-changesets.outputs.has_changesets == 'true'
+        if: steps.check-changesets.outputs.has_changesets == 'true' && env.DRY_RUN == 'false'
         id: changesets
         uses: changesets/action@v1
         with:
@@ -93,14 +105,14 @@ jobs:
 
       # Step 9: Log published packages
       - name: Log published packages
-        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true'
+        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true' && env.DRY_RUN == 'false'
         run: |
           echo "📦 Published packages:"
           echo "${{ steps.changesets.outputs.publishedPackages }}" | jq -r '.[] | "  - \(.name)@\(.version)"'
 
       # Step 10: Create GitHub releases for published packages
       - name: Create GitHub Releases
-        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true'
+        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true' && env.DRY_RUN == 'false'
         run: |
           echo "Creating GitHub releases for published packages..."
           echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -c '.[]' | while read package; do
@@ -130,7 +142,7 @@ jobs:
 
       # Step 11: Post-publish validation
       - name: Validate published packages
-        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true'
+        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true' && env.DRY_RUN == 'false'
         run: |
           echo "Validating published packages are accessible on npm..."
           echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -c '.[]' | while read package; do
