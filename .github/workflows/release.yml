@@ -39,23 +39,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 2-4: Setup Node environment with npm registry for publishing
-      - name: Setup Node env for publishing
-        uses: ./.github/actions/setup-node-env
-        with:
-          registry-url: 'https://registry.npmjs.org'
-
-      # Step 5: Build packages (required for publishing)
-      # Note: Lint and tests are NOT run here - they passed in CI before the PR was merged
-      - name: Build packages
-        run: pnpm build
-        timeout-minutes: 10
-
-      # Step 6: Configure Git for version commits
-      - name: Configure Git
-        uses: ./.github/actions/configure-git
-
-      # Step 7: Check if there are changesets to process
+      # Step 2: Check if there are changesets to process
       - name: Check for changesets
         id: check-changesets
         run: |
@@ -66,6 +50,25 @@ jobs:
             echo "has_changesets=false" >> $GITHUB_OUTPUT
             echo "No changesets found - skipping release"
           fi
+
+      # Step 3-5: Setup Node environment with npm registry for publishing
+      - name: Setup Node env for publishing
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        uses: ./.github/actions/setup-node-env
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      # Step 6: Build packages (required for publishing)
+      # Note: Lint and tests are NOT run here - they passed in CI before the PR was merged
+      - name: Build packages
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        run: pnpm build
+        timeout-minutes: 10
+
+      # Step 7: Configure Git for version commits
+      - name: Configure Git
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        uses: ./.github/actions/configure-git
 
       # Step 8: Create version PR or publish (only if changesets exist)
       - name: Create Release Pull Request or Publish
