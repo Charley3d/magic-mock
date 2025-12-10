@@ -1,0 +1,195 @@
+name: CI
+
+# This workflow acts as a PR gatekeeper - it MUST pass before merging to master.
+# Configure this workflow as a required status check in branch protection settings.
+# The release workflow assumes all checks have already passed via this CI workflow.
+on:
+  pull_request:
+    branches:
+      - master
+
+# Cancel in-progress runs when a new push occurs
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Job 1: Validate the code quality
+  validate:
+    name: Validate Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node env
+        uses: ./.github/actions/setup-node-env
+
+      # Step 2: Run linting (vue-cli require unplugin package to be built as it tries to load it)
+      - name: Lint code
+        run: pnpm build && pnpm lint
+        timeout-minutes: 5
+
+      # Step 3: Type checking (if available)
+      - name: Type check
+        run: pnpm -r type-check || echo "Type checking not available for all packages"
+        timeout-minutes: 5
+        continue-on-error: true
+
+  # Job 2: Build all packages
+  build:
+    name: Build Packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node env
+        uses: ./.github/actions/setup-node-env
+
+      # Build all packages
+      - name: Build packages
+        run: pnpm build
+        timeout-minutes: 10
+
+      # Cache build outputs for test job
+      - name: Cache build outputs
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            packages/*/dist
+          key: build-${{ github.sha }}
+
+  # Job 3: Run unit tests
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: build # Run after build completes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node env
+        uses: ./.github/actions/setup-node-env
+
+      # Restore cached build outputs
+      - name: Restore build outputs
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            packages/*/dist
+          key: build-${{ github.sha }}
+
+      # Run unit tests
+      - name: Run tests
+        run: pnpm test
+        timeout-minutes: 10
+
+  # Job 4: Run E2E tests
+  e2e:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    needs: build # Run after build completes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node env
+        uses: ./.github/actions/setup-node-env
+
+      # Restore cached build outputs
+      - name: Restore build outputs
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            packages/*/dist
+          key: build-${{ github.sha }}
+
+      # Install Playwright browsers
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        timeout-minutes: 10
+
+      # Run E2E tests
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        timeout-minutes: 15
+
+      # Upload Playwright report on failure
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # Job 5: Check for changeset (on PRs only)
+  changeset-check:
+    name: Check for Changeset
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node env
+        uses: ./.github/actions/setup-node-env
+
+      # Check if a changeset was added (only fails if packages changed without changeset)
+      - name: Check for changesets
+        run: |
+          # Check if any package files were modified
+          if git diff --name-only origin/master...HEAD | grep -q "^packages/.*\.\(ts\|js\|json\)$"; then
+            echo "Package files were modified"
+
+            # Check if a changeset was added
+            if git diff --name-only origin/master...HEAD | grep -q "^\.changeset/.*\.md$"; then
+              echo "✅ Changeset found"
+              exit 0
+            else
+              echo "⚠️  Warning: Package files were modified but no changeset was added"
+              echo "Please run 'pnpm changeset' to document your changes"
+              echo ""
+              echo "If this is not a user-facing change, you can ignore this warning"
+              # Don't fail the build - just warn
+              exit 0
+            fi
+          else
+            echo "No package files were modified - changeset not required"
+          fi
+        continue-on-error: true
+
+  # Job 6: All checks passed (required status check for PRs)
+  all-checks-passed:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [validate, build, test, e2e]
+    if: always()
+
+    steps:
+      - name: Check all jobs succeeded
+        run: |
+          if [ "${{ needs.validate.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.e2e.result }}" != "success" ]; then
+            echo "One or more required checks failed"
+            exit 1
+          fi
+          echo "All required checks passed!"

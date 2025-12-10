@@ -1,0 +1,163 @@
+name: Release
+
+# This workflow handles versioning and publishing packages to npm using changesets.
+# It runs on pushes to master (after PR merges).
+#
+# IMPORTANT: This workflow assumes all quality checks (lint, build, test) have already
+# passed via the CI workflow before the PR was merged. Branch protection should require
+# the CI workflow to pass before allowing merges to master.
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Skip actual publishing'
+        type: boolean
+        default: false
+
+# Prevent concurrent releases to avoid race conditions
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release and Publish
+    runs-on: ubuntu-latest
+    env:
+      DRY_RUN: ${{ inputs.dry-run || false }}
+
+    # Required permissions for the workflow
+    permissions:
+      contents: write # Needed to push version commits and tags
+      id-token: write # Needed for npm provenance (trusted publishing)
+
+    # Only run if the push is not from the github-actions bot (prevents infinite loops)
+    if: >
+      !contains(github.event.head_commit.message, 'ci: version packages') &&
+      github.actor != 'github-actions[bot]'
+
+    steps:
+      # Step 0: Dry run check
+      - name: Dry run - skipping publish
+        if: env.DRY_RUN == 'true'
+        run: echo "🧪 Dry run mode - skipping publish and release steps"
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Check if there are changesets to process
+      - name: Check for changesets
+        id: check-changesets
+        run: |
+          if [ -d ".changeset" ] && [ -n "$(ls -A .changeset/*.md 2>/dev/null | grep -v 'README.md')" ]; then
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+            echo "Found changesets to process"
+          else
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+            echo "No changesets found - skipping release"
+          fi
+
+      # Step 3-5: Setup Node environment with npm registry for publishing
+      - name: Setup Node env for publishing
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        uses: ./.github/actions/setup-node-env
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      # Step 6: Build packages (required for publishing)
+      # Note: Lint and tests are NOT run here - they passed in CI before the PR was merged
+      - name: Build packages
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        run: pnpm build
+        timeout-minutes: 10
+
+      # Step 7: Configure Git for version commits
+      - name: Configure Git
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        uses: ./.github/actions/configure-git
+
+      # Step 8: Create version PR or publish (only if changesets exist)
+      - name: Create Release Pull Request or Publish
+        if: steps.check-changesets.outputs.has_changesets == 'true' && env.DRY_RUN == 'false'
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          # Version packages and update CHANGELOG files
+          version: pnpm changeset:version
+          # Build and publish to npm
+          publish: pnpm changeset:publish
+          # Commit message for version bump
+          commit: 'ci: version packages'
+          # Title for the version PR (if one is created)
+          title: 'ci: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Enable npm provenance for supply chain security
+          # This creates a verifiable link between packages and their source code
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Step 9: Log published packages
+      - name: Log published packages
+        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true' && env.DRY_RUN == 'false'
+        run: |
+          echo "📦 Published packages:"
+          echo "${{ steps.changesets.outputs.publishedPackages }}" | jq -r '.[] | "  - \(.name)@\(.version)"'
+
+      # Step 10: Create GitHub releases for published packages
+      - name: Create GitHub Releases
+        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true' && env.DRY_RUN == 'false'
+        run: |
+          echo "Creating GitHub releases for published packages..."
+          echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -c '.[]' | while read package; do
+            name=$(echo $package | jq -r '.name')
+            version=$(echo $package | jq -r '.version')
+            tag="${name}@${version}"
+
+            echo "Creating release for $tag"
+
+            # Extract changelog for this version if it exists
+            changelog_file="packages/$(echo $name | cut -d'/' -f2)/CHANGELOG.md"
+            if [ -f "$changelog_file" ]; then
+              # Try to extract the changelog section for this version
+              changelog=$(awk "/^## $version/,/^## [0-9]/" "$changelog_file" | sed '$d' | tail -n +2)
+            else
+              changelog="Release $version"
+            fi
+
+            # Create the GitHub release
+            gh release create "$tag" \
+              --title "$tag" \
+              --notes "$changelog" \
+              --verify-tag 2>/dev/null || echo "Release $tag already exists or tag not found"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 11: Post-publish validation
+      - name: Validate published packages
+        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true' && env.DRY_RUN == 'false'
+        run: |
+          echo "Validating published packages are accessible on npm..."
+          echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -c '.[]' | while read package; do
+            name=$(echo $package | jq -r '.name')
+            version=$(echo $package | jq -r '.version')
+
+            echo "Checking $name@$version..."
+            # Wait a few seconds for npm registry to propagate
+            sleep 5
+
+            # Verify the package exists on npm
+            if npm view "$name@$version" version 2>/dev/null; then
+              echo "✅ $name@$version is available on npm"
+            else
+              echo "⚠️  Warning: $name@$version may not be available yet (registry propagation delay)"
+            fi
+          done
+        timeout-minutes: 5
