@@ -9,7 +9,7 @@ name: Release
 on:
   push:
     branches:
-      - chore-add-ci
+      - master
   workflow_dispatch:
     inputs:
       dry-run:
