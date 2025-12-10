@@ -64,3 +64,15 @@ export interface StoredMedia {
   size: number
   type: string
 }
+
+export interface MagicMockConfig {
+  apiPrefix: string
+  getCachePath: string
+  setCachePath: string
+}
+
+declare global {
+  interface Window {
+    __MAGIC_MOCK_CONFIG__?: MagicMockConfig
+  }
+}

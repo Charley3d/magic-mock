@@ -1,12 +1,15 @@
-import { CacheRecord } from '../types'
+import { getConfig } from '../config/endpoints'
+import { CacheRecord, MagicMockConfig } from '../types'
 import { calculateFileDelay } from '../utils'
 import { Store } from './Store'
 
 export class RemoteStore implements Store {
   private sizeLimit: number
+  private config: MagicMockConfig
 
   constructor(sizeLimit: number = 1000000) {
     this.sizeLimit = sizeLimit
+    this.config = getConfig()
   }
 
   async get(
@@ -20,7 +23,9 @@ export class RemoteStore implements Store {
       ...(body && { body }),
     })
 
-    const cacheResponse = await originalFetch(`/api/__get-cache?${params}`)
+    const cacheResponse = await originalFetch(
+      `${this.config.apiPrefix}${this.config.getCachePath}?${params}`,
+    )
 
     if (!cacheResponse.ok) {
       throw new Error('Cache not found')
@@ -84,7 +89,7 @@ export class RemoteStore implements Store {
       headers: Object.fromEntries(headers.entries()),
     }
 
-    const res = await originalFetch('/api/__record', {
+    const res = await originalFetch(`${this.config.apiPrefix}${this.config.setCachePath}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(record),

@@ -1,3 +1,4 @@
+import { MagicMockConfig } from '@magicmock/core'
 import fs from 'fs'
 import type HtmlWebpackPlugin from 'html-webpack-plugin'
 import { createRequire } from 'node:module'
@@ -5,6 +6,8 @@ import path from 'path'
 import type { UnpluginFactory } from 'unplugin'
 import { createUnplugin } from 'unplugin'
 import type { ViteDevServer } from 'vite'
+import { getCache } from './middlewares/getCache'
+import { setCache } from './middlewares/setCache'
 
 const require = createRequire(import.meta.url)
 
@@ -20,10 +23,18 @@ export interface MagicMockOptions {
    * @default true
    */
   enabled?: boolean
+
+  endpoints?: MagicMockConfig
 }
 
 const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options = {}) => {
   const cacheDir = path.join(process.cwd(), options.cacheDir || '.request-cache')
+  const apiPrefix = options?.endpoints?.apiPrefix || '/api'
+  const setCachePath = options?.endpoints?.setCachePath || '/set-cache'
+  const getCachePath = options?.endpoints?.getCachePath || '/get-cache'
+
+  const setCacheEndpoint = `${apiPrefix}${setCachePath}`
+  const getCacheEndpoint = `${apiPrefix}${getCachePath}`
 
   return {
     name: 'magic-mock',
@@ -43,75 +54,10 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
         if (!fs.existsSync(cacheDir)) {
           fs.mkdirSync(cacheDir, { recursive: true })
         }
-
         // Endpoint to record requests
-        server.middlewares.use('/api/__record', (req, res) => {
-          if (req.method === 'POST') {
-            let body = ''
-            req.on('data', (chunk) => (body += chunk))
-            req.on('end', () => {
-              const {
-                url,
-                method,
-                body: requestBody,
-                response,
-                status,
-                headers,
-              } = JSON.parse(body) as Record<string, unknown> //TODO: Create a dedicated interface
-
-              // Generate filename based on method + URL + body
-              const cacheKey = `${method as string}:${url as string}${requestBody ? ':' + (requestBody as string) : ''}`
-              const filename =
-                Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
-              const filepath = path.join(cacheDir, filename)
-
-              fs.writeFileSync(
-                filepath,
-                JSON.stringify(
-                  { url, method, body: requestBody, response, status, headers },
-                  null,
-                  2,
-                ),
-              )
-              res.writeHead(200, { 'Content-Type': 'application/json' })
-              res.end(JSON.stringify({ success: true }))
-            })
-          }
-        })
-
+        server.middlewares.use(setCacheEndpoint, (req, res) => setCache(req, res, cacheDir))
         // Endpoint to get cached requests
-        server.middlewares.use('/api/__get-cache', (req, res) => {
-          if (req.method === 'GET') {
-            const urlObj = new URL(req.url || '', `http://${req.headers.host}`)
-            const url = urlObj.searchParams.get('url')
-            const method = urlObj.searchParams.get('method')
-            const body = urlObj.searchParams.get('body')
-
-            if (!url || !method) {
-              res.writeHead(400)
-              res.end(JSON.stringify({ error: 'Missing url or method parameter' }))
-              return
-            }
-
-            // Generate filename based on method + URL + body (same as recording)
-            const cacheKey = `${method}:${url}${body ? ':' + body : ''}`
-            const filename =
-              Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
-            const filepath = path.join(cacheDir, filename)
-
-            if (fs.existsSync(filepath)) {
-              const cached = JSON.parse(fs.readFileSync(filepath, 'utf-8')) as Record<
-                string,
-                unknown
-              > // TODO: Create a dedicated interface
-              res.writeHead(200, { 'Content-Type': 'application/json' })
-              res.end(JSON.stringify(cached))
-            } else {
-              res.writeHead(404)
-              res.end()
-            }
-          }
-        })
+        server.middlewares.use(getCacheEndpoint, (req, res) => getCache(req, res, cacheDir))
       },
 
       transformIndexHtml() {
@@ -131,6 +77,15 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
             tag: 'script',
             attrs: { type: 'module' },
             children: clientScript,
+            injectTo: 'head-prepend',
+          },
+          {
+            tag: 'script',
+            children: `window.__MAGIC_MOCK_CONFIG__ = {
+            apiPrefix: "${apiPrefix}",
+            getCachePath: "${getCachePath}",
+            setCachePath: "${setCachePath}",
+            };`,
             injectTo: 'head-prepend',
           },
         ]

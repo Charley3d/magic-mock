@@ -34,6 +34,15 @@ export default defineConfig([
       __STANDALONE__: 'true',
     },
   },
+  // Endpoints, allowing unplugin to import and configure endpoint paths
+  {
+    entry: 'src/config/endpoints.ts',
+    format: ['esm'],
+    dts: true,
+    outDir: 'dist/endpoints',
+    minify: true,
+    outExtensions: () => ({ js: '.js' }),
+  },
   // CLI
   {
     entry: 'bin/cli.ts',

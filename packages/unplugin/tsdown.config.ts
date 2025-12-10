@@ -8,7 +8,7 @@ export default defineConfig({
     rollup: 'src/rollup.ts',
     esbuild: 'src/esbuild.ts',
   },
-  format: ['cjs', 'esm'],
+  format: ['esm'],
   dts: true,
   clean: true,
   treeshake: true,
