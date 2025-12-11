@@ -56,7 +56,7 @@ export const setCache = (
         response,
         status,
         headers,
-      } = JSON.parse(body) as CacheRecord //TODO: Create a dedicated interface
+      } = JSON.parse(body) as CacheRecord
 
       // Generate filename based on method + URL + body
       const cacheKey = `${method}:${url}${requestBody ? ':' + requestBody : ''}`
