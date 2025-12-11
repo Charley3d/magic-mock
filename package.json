@@ -6,7 +6,7 @@
   "description": "Monorepo for Magic Mock - HTTP request recording and replay for development",
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" build",
-    "dev": "pnpm -r --parallel --filter './packages/*' dev",
+    "dev": "pnpm -r --parallel --filter \"./packages/*\" dev",
     "test": "pnpm -r --filter './packages/*' test",
     "test:e2e": "playwright test",
     "test:e2e:simple-axios": "playwright test --project=simple-axios --ui",

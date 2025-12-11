@@ -1,11 +1,11 @@
-import { getConfig } from '../config/endpoints'
-import { CacheRecord, MagicMockConfig } from '../types'
+import { getConfig } from '../config'
+import { CacheRecord, MagicMockEndpointPaths } from '../types'
 import { calculateFileDelay } from '../utils'
 import { Store } from './Store'
 
 export class RemoteStore implements Store {
   private sizeLimit: number
-  private config: MagicMockConfig
+  private config: MagicMockEndpointPaths
 
   constructor(sizeLimit: number = 1000000) {
     this.sizeLimit = sizeLimit

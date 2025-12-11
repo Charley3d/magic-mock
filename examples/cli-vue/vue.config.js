@@ -2,14 +2,25 @@ const MagicMock = require('@magicmock/unplugin/webpack')
 const { defineConfig } = require('@vue/cli-service')
 const fs = require('fs')
 const path = require('path')
+
+const apiPrefix = '/chamagic'
+const getCachePath = '/get-mock'
+const setCachePath = '/set-mock'
+
+const getCacheEndpoint = `${apiPrefix}${getCachePath}`
+const setCacheEndpoint = `${apiPrefix}${setCachePath}`
+
 module.exports = defineConfig({
   transpileDependencies: true,
 
   configureWebpack: {
     plugins: [
       MagicMock({
-        cacheDir: '.request-cache',
-        enabled: true,
+        endpoints: {
+          apiPrefix,
+          getCachePath,
+          setCachePath,
+        },
       }),
     ],
   },
@@ -26,7 +37,7 @@ module.exports = defineConfig({
       }
 
       // Record endpoint
-      devServer.app.post('/api/__record', (req, res) => {
+      devServer.app.post(setCacheEndpoint, (req, res) => {
         let body = ''
         req.on('data', (chunk) => (body += chunk))
         req.on('end', () => {
@@ -46,7 +57,7 @@ module.exports = defineConfig({
       })
 
       // Get cache endpoint
-      devServer.app.get('/api/__get-cache', (req, res) => {
+      devServer.app.get(getCacheEndpoint, (req, res) => {
         const url = req.query.url
         if (!url) {
           res.writeHead(400)

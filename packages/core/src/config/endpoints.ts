@@ -1,9 +1,9 @@
-import { MagicMockConfig } from '../types'
+import { MagicMockEndpointPaths } from '../types'
+import { GLOBAL_CONFIG_KEY } from './const'
 
-// Helper function
-export function getConfig(): MagicMockConfig {
+export function getConfig(): MagicMockEndpointPaths {
   return (
-    window.__MAGIC_MOCK_CONFIG__ ?? {
+    window[GLOBAL_CONFIG_KEY] ?? {
       apiPrefix: '/__magic-mock',
       getCachePath: '/__get-cache',
       setCachePath: '/__set-cache',

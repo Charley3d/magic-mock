@@ -21,31 +21,12 @@ export interface MagicMockOptions {
   cacheDir?: string
 
   /**
-   * Enable/disable the plugin
-   * @default true
-   */
-  enabled?: boolean
-
-  /**
-   * Size limit for standalone (LocalStore) caching in bytes
-   * @default 50000 (50KB)
-   * Set to 0 for no limit
-   */
-  standaloneSizeLimit?: number
-
-  /**
-   * Size limit for unplugin (RemoteStore) caching in bytes
-   * @default 1000000 (1MB)
-   * Set to 0 for no limit
-   */
-  unpluginSizeLimit?: number
-
-  /**
    * Simulated upload speed for file uploads in bytes/second
    * Used to calculate fake delays when mocking file uploads
    * @default 1048576 (1MB/s)
    */
   uploadSpeed?: number
+  endpoints?: MagicMockEndpointPaths
 }
 
 export type RecordingMode = 'recording' | 'mocking' | 'off'
@@ -65,7 +46,7 @@ export interface StoredMedia {
   type: string
 }
 
-export interface MagicMockConfig {
+export interface MagicMockEndpointPaths {
   apiPrefix: string
   getCachePath: string
   setCachePath: string
@@ -73,6 +54,6 @@ export interface MagicMockConfig {
 
 declare global {
   interface Window {
-    __MAGIC_MOCK_CONFIG__?: MagicMockConfig
+    __MAGIC_MOCK_CONFIG__?: MagicMockEndpointPaths
   }
 }

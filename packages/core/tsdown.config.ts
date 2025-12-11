@@ -1,22 +1,30 @@
-import { defineConfig } from 'tsdown'
+import { defineConfig, UserConfig } from 'tsdown'
+
+const shared: UserConfig = {
+  ignoreWatch: ['dist', 'node_modules', 'tsdown.config.ts'],
+  format: ['esm' as const],
+  dts: true,
+  sourcemap: true,
+  outExtensions: () => ({ js: '.js' }),
+  minify: false,
+  clean: true,
+}
 
 export default defineConfig([
   // Main library entry - compile TypeScript with declarations
   {
     entry: 'src/index.ts',
-    format: ['esm'],
-    dts: true,
-    sourcemap: true,
-    outDir: 'dist',
-    outExtensions: () => ({ js: '.js' }),
+    ...shared,
+  },
+  {
+    entry: 'src/config/index.ts',
+    outDir: 'dist/config',
+    ...shared,
   },
   // Client script bundle (non-standalone mode)
   {
     entry: 'src/client-script.ts',
-    format: ['esm'],
-    dts: true,
-    sourcemap: true,
-    outExtensions: () => ({ js: '.js' }),
+    ...shared,
     define: {
       __STANDALONE__: 'false',
     },
@@ -24,32 +32,23 @@ export default defineConfig([
   // Standalone client script bundle
   {
     entry: 'src/client-script.ts',
-    format: ['esm'],
-    dts: true,
-    sourcemap: true,
+    ...shared,
     outDir: 'dist/standalone',
-    minify: true,
-    outExtensions: () => ({ js: '.js' }),
     define: {
       __STANDALONE__: 'true',
     },
   },
   // Endpoints, allowing unplugin to import and configure endpoint paths
-  {
-    entry: 'src/config/endpoints.ts',
-    format: ['esm'],
-    dts: true,
-    outDir: 'dist/endpoints',
-    minify: true,
-    outExtensions: () => ({ js: '.js' }),
-  },
+  // {
+  //   entry: 'src/config/endpoints.ts',
+  //   ...shared,
+  //   outDir: 'dist/endpoints',
+  // },
   // CLI
   {
     entry: 'bin/cli.ts',
-    format: ['esm'],
-    outDir: 'dist',
     banner: '#!/usr/bin/env node',
-    outExtensions: () => ({ js: '.js' }),
     noExternal: [/.*/],
+    ...shared,
   },
 ])

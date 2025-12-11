@@ -145,7 +145,7 @@ export function isCacheable(url: URL | null, method: string): boolean {
 }
 
 export const originalFetch = window.fetch
-export const originalXMLHttpRequest = window.XMLHttpRequest
+export const originalXMLHttpRequest = window?.XMLHttpRequest
 
 export const isRecording = () => localStorage.getItem('magic-mock-recording') === 'true'
 export const isMocking = () => localStorage.getItem('magic-mock-mocking') === 'true'
