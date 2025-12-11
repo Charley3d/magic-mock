@@ -7,7 +7,7 @@
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" build",
     "dev": "pnpm -r --parallel --filter \"./packages/*\" dev",
-    "test": "pnpm -r --filter './packages/*' test",
+    "test": "pnpm -r --filter \"./packages/*\" test",
     "test:e2e": "playwright test",
     "test:e2e:simple-axios": "playwright test --project=simple-axios --ui",
     "test:e2e:simple-jquery": "playwright test --project=simple-jquery",

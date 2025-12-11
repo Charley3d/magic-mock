@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RemoteStore } from '../../src/store/RemoteStore'
-import { createMockResponse } from '../test-utils'
 import { CacheRecord } from '../../src/types'
+import { createMockResponse } from '../test-utils'
 
 describe('RemoteStore', () => {
   let store: RemoteStore
@@ -50,15 +50,11 @@ describe('RemoteStore', () => {
 
       const response = await store.get(mockFetch, { url, method })
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/__get-cache?'),
-      )
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/__magic-mock/__get-cache?'))
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining(`url=${encodeURIComponent(url)}`),
       )
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining(`method=${method}`),
-      )
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining(`method=${method}`))
 
       expect(response).toBeInstanceOf(Response)
       const data = await response.json()
@@ -91,9 +87,7 @@ describe('RemoteStore', () => {
       const url = 'http://example.com/api/nonexistent'
       const method = 'GET'
 
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse('Not found', { status: 404 }),
-      )
+      mockFetch.mockResolvedValueOnce(createMockResponse('Not found', { status: 404 }))
 
       await expect(store.get(mockFetch, { url, method })).rejects.toThrow('Cache not found')
     })
@@ -162,43 +156,39 @@ describe('RemoteStore', () => {
       expect(text).toBe('plain text response')
     })
 
-    it(
-      'should apply delay for file uploads',
-      async () => {
-        const url = 'http://example.com/api/upload'
-        const method = 'POST'
-        const fileMetadata = {
-          file: {
-            _file: true,
-            name: 'test.txt',
-            size: 10485760, // 10MB
-            type: 'text/plain',
-          },
-        }
-        const body = JSON.stringify(fileMetadata)
-        const cachedData: CacheRecord = {
-          url,
-          method,
-          body,
-          response: { success: true },
-          status: 200,
-          headers: {},
-        }
+    it('should apply delay for file uploads', async () => {
+      const url = 'http://example.com/api/upload'
+      const method = 'POST'
+      const fileMetadata = {
+        file: {
+          _file: true,
+          name: 'test.txt',
+          size: 10485760, // 10MB
+          type: 'text/plain',
+        },
+      }
+      const body = JSON.stringify(fileMetadata)
+      const cachedData: CacheRecord = {
+        url,
+        method,
+        body,
+        response: { success: true },
+        status: 200,
+        headers: {},
+      }
 
-        mockFetch.mockResolvedValueOnce(createMockResponse(cachedData))
+      mockFetch.mockResolvedValueOnce(createMockResponse(cachedData))
 
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-        await store.get(mockFetch, { url, method, body })
+      await store.get(mockFetch, { url, method, body })
 
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          expect.stringMatching(/Simulating upload delay: \d+ms/),
-        )
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/Simulating upload delay: \d+ms/),
+      )
 
-        consoleLogSpy.mockRestore()
-      },
-      15000,
-    ) // 15 second timeout for delay test
+      consoleLogSpy.mockRestore()
+    }, 15000) // 15 second timeout for delay test
 
     it('should not apply delay for non-file requests', async () => {
       const url = 'http://example.com/api/users'
@@ -244,7 +234,7 @@ describe('RemoteStore', () => {
         response,
       })
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/__record', {
+      expect(mockFetch).toHaveBeenCalledWith('/__magic-mock/__set-cache', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: expect.any(String),
@@ -344,11 +334,7 @@ describe('RemoteStore', () => {
         response,
       })
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Cached:'),
-        method,
-        url,
-      )
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Cached:'), method, url)
 
       consoleLogSpy.mockRestore()
     })
@@ -397,7 +383,7 @@ describe('RemoteStore', () => {
         response,
       })
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/__record', expect.any(Object))
+      expect(mockFetch).toHaveBeenCalledWith('/__magic-mock/__set-cache', expect.any(Object))
     })
 
     it('should cache when body is within size limit', async () => {
@@ -418,7 +404,7 @@ describe('RemoteStore', () => {
         response,
       })
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/__record', expect.any(Object))
+      expect(mockFetch).toHaveBeenCalledWith('/__magic-mock/__set-cache', expect.any(Object))
     })
   })
 
