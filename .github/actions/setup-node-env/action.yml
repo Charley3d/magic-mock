@@ -21,7 +21,7 @@ runs:
       uses: actions/setup-node@v6
       with:
         node-version: '22.12.0'
-        registry-url: ${{ inputs.registry-url != '' && inputs.registry-url || null }}
+        registry-url: 'https://registry.npmjs.org'
         cache: 'pnpm'
 
     - name: Install dependencies
