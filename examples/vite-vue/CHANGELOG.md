@@ -1,5 +1,11 @@
 # vite-vue
 
+## 0.6.0
+
+### Minor Changes
+
+- b75c786: Refactor the unplugin package architecture and adds support for configurable Magic Mock endpoints
+
 ## 0.5.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # simple-axios
 
+## 1.3.1
+
+### Patch Changes
+
+- Updated dependencies [b75c786]
+  - @magicmock/core@0.8.0
+
 ## 1.3.0
 
 ### Minor Changes

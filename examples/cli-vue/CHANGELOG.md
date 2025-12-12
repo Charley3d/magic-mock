@@ -1,5 +1,11 @@
 # cli-vue
 
+## 0.4.0
+
+### Minor Changes
+
+- b75c786: Refactor the unplugin package architecture and adds support for configurable Magic Mock endpoints
+
 ## 0.3.0
 
 ### Minor Changes
