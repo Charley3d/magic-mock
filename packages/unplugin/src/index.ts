@@ -52,8 +52,8 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
 
         return injectScripts(
           [
-            { content: clientScript, type: 'module' },
             { content: configurationToInject(apiPrefix, getCachePath, setCachePath) },
+            { content: clientScript, type: 'module' },
           ],
           'vite',
         )

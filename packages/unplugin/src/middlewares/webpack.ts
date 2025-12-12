@@ -56,7 +56,6 @@ export function createDevServerConfig(options: MagicMockOptions = {}) {
   const getCacheEndpoint = `${apiPrefix}${getCachePath}`
 
   return function setupMagicMockEndpoints(devServer: any) {
-    console.log(setCacheEndpoint)
     devServer.app.post(setCacheEndpoint, (req: any, res: any) => setCache(req, res, cacheDir))
     devServer.app.get(getCacheEndpoint, (req: any, res: any) => getCache(req, res, cacheDir))
   }
