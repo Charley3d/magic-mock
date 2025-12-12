@@ -47,7 +47,11 @@ jobs:
 
       - name: Update npm
         run: npm install -g npm@latest
-      - run: npm publish
+      - run: |
+          cd packages/core
+          npm publish
+          cd ../unplugin
+          npm publish
 
       - name: Create GitHub Releases
         run: |
