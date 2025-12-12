@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test'
+import { requireEnv } from './utils'
 
 /**
  * Helper utilities for testing Magic Mock functionality
@@ -178,8 +179,10 @@ export async function setupNetworkInterceptor(page: Page): Promise<NetworkInterc
   const requests: string[] = []
 
   page.on('request', (request) => {
-    console.log(request.url())
-    if (request.url().includes('pokeapi.co') && !request.url().includes('get-mock')) {
+    if (
+      request.url().includes('pokeapi.co') &&
+      !request.url().includes(requireEnv('MAGIC_MOCK_GET_CACHE_PATH'))
+    ) {
       requests.push(request.url())
     }
   })

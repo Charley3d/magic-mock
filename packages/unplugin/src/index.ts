@@ -16,6 +16,7 @@ function createCacheDir(cacheDir: string) {
 
 const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options = {}) => {
   const cacheDir = path.join(process.cwd(), options.cacheDir || '.request-cache')
+
   const apiPrefix = options?.endpoints?.apiPrefix || '/api'
   const setCachePath = options?.endpoints?.setCachePath || '/set-cache'
   const getCachePath = options?.endpoints?.getCachePath || '/get-cache'

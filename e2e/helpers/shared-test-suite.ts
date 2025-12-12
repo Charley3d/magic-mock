@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test'
+import * as dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import {
   clearMagicMockCache,
   getMagicMockMode,
@@ -34,6 +37,10 @@ import {
  * createMagicMockTestSuite('simple-axios')
  * ```
  */
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+dotenv.config({ path: path.resolve(__dirname, '../../examples/.env.test') })
 
 export function createMagicMockTestSuite(projectName: string) {
   test.describe(`Magic Mock - Mode Testing (${projectName})`, () => {
@@ -119,7 +126,7 @@ export function createMagicMockTestSuite(projectName: string) {
     })
   })
 
-  test.describe.only(`Magic Mock - Mocking Mode (${projectName})`, () => {
+  test.describe(`Magic Mock - Mocking Mode (${projectName})`, () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/')
       await waitForPageReady(page)

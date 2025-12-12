@@ -1,4 +1,4 @@
-import { getConfig } from '../config'
+import { getEndpointConfig } from '../config'
 import { CacheRecord, MagicMockEndpointPaths } from '../types'
 import { calculateFileDelay } from '../utils'
 import { Store } from './Store'
@@ -9,7 +9,7 @@ export class RemoteStore implements Store {
 
   constructor(sizeLimit: number = 1000000) {
     this.sizeLimit = sizeLimit
-    this.config = getConfig()
+    this.config = getEndpointConfig()
   }
 
   async get(
