@@ -22,28 +22,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node env
-        uses: ./.github/actions/setup-node-env
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
+          node-version: '22.12.0'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Build packages
         run: pnpm build
 
-      - name: Create git tags
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+      # - name: Create git tags
+      #   run: |
+      #     git config user.name "github-actions[bot]"
+      #     git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Tag core package
-          git tag @magicmock/core@0.8.0 -m "Release @magicmock/core@0.8.0"
+      #     # Tag core package
+      #     git tag @magicmock/core@0.8.0 -m "Release @magicmock/core@0.8.0"
 
-          # Tag unplugin package
-          git tag @magicmock/unplugin@0.7.0 -m "Release @magicmock/unplugin@0.7.0"
+      #     # Tag unplugin package
+      #     git tag @magicmock/unplugin@0.7.0 -m "Release @magicmock/unplugin@0.7.0"
 
-          # Push tags
-          git push origin @magicmock/core@0.8.0
-          git push origin @magicmock/unplugin@0.7.0
+      #     # Push tags
+      #     git push origin @magicmock/core@0.8.0
+      #     git push origin @magicmock/unplugin@0.7.0
 
       - name: Update npm
         run: npm install -g npm@latest
