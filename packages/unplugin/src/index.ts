@@ -35,8 +35,6 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
         console.log('✅ Magic Mock initialized - cache dir:', cacheDir)
       },
       configureServer(server: ViteDevServer) {
-        // Ensure cache directory exists
-        createCacheDir(cacheDir)
         // Endpoint to record requests
         server.middlewares.use(setCacheEndpoint, (req, res) => setCache(req, res, cacheDir))
         // Endpoint to get cached requests
@@ -50,12 +48,14 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
           return []
         }
 
-        return injectScripts(
-          [
-            { content: configurationToInject(apiPrefix, getCachePath, setCachePath) },
-            { content: clientScript, type: 'module' },
-          ],
-          'vite',
+        return (
+          injectScripts(
+            [
+              { content: configurationToInject(apiPrefix, getCachePath, setCachePath) },
+              { content: clientScript, type: 'module' },
+            ],
+            'vite',
+          ) ?? []
         )
       },
     },

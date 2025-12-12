@@ -6,20 +6,20 @@ import { Bundler, InjectedScriptVite, InjectedScriptWebpack } from '../types'
 export function injectScripts(
   scripts: { content: string; type?: string }[],
   bundler: 'vite',
-): InjectedScriptVite[]
+): InjectedScriptVite[] | void
 export function injectScripts(
   scripts: { content: string; type?: string }[],
   bundler: 'webpack',
-): InjectedScriptWebpack[]
+): InjectedScriptWebpack[] | void
 export function injectScripts(
   scripts: { content: string; type?: string }[],
   bundler: Bundler,
-): InjectedScriptVite[] | InjectedScriptWebpack[] {
+): InjectedScriptVite[] | InjectedScriptWebpack[] | void {
   switch (bundler) {
     case 'vite':
       return scripts.map((script) => ({
         tag: 'script' as const,
-        attrs: script.type ? { type: script.type } : {},
+        attrs: { type: script.type || 'text/javascript' },
         children: script.content,
         injectTo: 'head-prepend' as const,
       }))
@@ -32,7 +32,7 @@ export function injectScripts(
         meta: {},
       }))
     default:
-      throw new Error(`Unsupported bundler: ${bundler}`)
+      throw new Error(`Unsupported bundler: ${bundler as string}`)
   }
 }
 

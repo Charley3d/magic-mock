@@ -1,16 +1,4 @@
 /**
- * Cached request data structure
- */
-export interface CachedRequest {
-  url: string
-  method: string
-  body?: string
-  response: unknown
-  status: number
-  headers: Record<string, string>
-}
-
-/**
  * Magic Mock configuration options
  */
 export interface MagicMockOptions {

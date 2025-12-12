@@ -1,3 +1,4 @@
+import { CacheRecord } from '@magicmock/core'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { type IncomingMessage, type ServerResponse } from 'http'
 import path from 'path'
@@ -35,7 +36,7 @@ export const getCache = (
 
     const buffer = readFileSync(filepath)
 
-    return optimizedSendJson(req, res, buffer)
+    optimizedSendJson(req, res, buffer)
   }
 }
 
@@ -55,10 +56,10 @@ export const setCache = (
         response,
         status,
         headers,
-      } = JSON.parse(body) as Record<string, unknown> //TODO: Create a dedicated interface
+      } = JSON.parse(body) as CacheRecord //TODO: Create a dedicated interface
 
       // Generate filename based on method + URL + body
-      const cacheKey = `${method as string}:${url as string}${requestBody ? ':' + (requestBody as string) : ''}`
+      const cacheKey = `${method}:${url}${requestBody ? ':' + requestBody : ''}`
       const filename = Buffer.from(cacheKey).toString('base64').replace(/[/+=]/g, '_') + '.json'
       const filepath = path.join(cacheDir, filename)
 

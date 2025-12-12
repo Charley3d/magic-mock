@@ -6,7 +6,7 @@ export function sendCompressedJson(req: IncomingMessage, res: ServerResponse, da
   const cached = JSON.parse(data.toString('utf-8')) as Record<string, unknown>
   const statusCode = (cached.status as number) || 200
   const body = JSON.stringify(cached) // compact JSON
-  const encodingHeader = (req.headers['accept-encoding'] || '') as string
+  const encodingHeader = (req.headers['accept-encoding'] || '')
   const acceptEncodings = /\bgzip\b/.test(encodingHeader)
   const byteLength = Buffer.byteLength(body)
 

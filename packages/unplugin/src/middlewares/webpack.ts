@@ -1,7 +1,9 @@
 import { MagicMockEndpointPaths, MagicMockOptions } from '@magicmock/core'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
+import { type IncomingMessage, type ServerResponse } from 'node:http'
 import path from 'path'
 import { Compilation } from 'webpack'
+import { DevServerLike } from '../types'
 import { getCache, setCache } from './cache'
 import { configurationToInject, injectScripts, magicMockCoreToInject } from './inject'
 
@@ -29,7 +31,7 @@ export function registerHtmlWebpackPluginHooks(
               { content: clientScript, type: 'module' },
             ],
             'webpack',
-          ),
+          ) ?? [],
         )
       }
 
@@ -55,8 +57,17 @@ export function createDevServerConfig(options: MagicMockOptions = {}) {
   const setCacheEndpoint = `${apiPrefix}${setCachePath}`
   const getCacheEndpoint = `${apiPrefix}${getCachePath}`
 
-  return function setupMagicMockEndpoints(devServer: any) {
-    devServer.app.post(setCacheEndpoint, (req: any, res: any) => setCache(req, res, cacheDir))
-    devServer.app.get(getCacheEndpoint, (req: any, res: any) => getCache(req, res, cacheDir))
+  return function setupMagicMockEndpoints(devServer: DevServerLike) {
+    if (!devServer.app || !devServer.app.post || !devServer.app.get) {
+      return
+    }
+    devServer.app.post(
+      setCacheEndpoint,
+      (req: IncomingMessage, res: ServerResponse<IncomingMessage>) => setCache(req, res, cacheDir),
+    )
+    devServer.app.get(
+      getCacheEndpoint,
+      (req: IncomingMessage, res: ServerResponse<IncomingMessage>) => getCache(req, res, cacheDir),
+    )
   }
 }
