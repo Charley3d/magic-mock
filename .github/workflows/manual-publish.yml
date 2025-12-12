@@ -1,0 +1,65 @@
+name: Manual Publish
+
+# One-time workflow to publish packages that were version-bumped but not published
+# due to the workflow skip condition bug
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish Packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node env
+        uses: ./.github/actions/setup-node-env
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Create git tags
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Tag core package
+          git tag @magicmock/core@0.8.0 -m "Release @magicmock/core@0.8.0"
+
+          # Tag unplugin package
+          git tag @magicmock/unplugin@0.7.0 -m "Release @magicmock/unplugin@0.7.0"
+
+          # Push tags
+          git push origin @magicmock/core@0.8.0
+          git push origin @magicmock/unplugin@0.7.0
+
+      - name: Publish to npm
+        run: pnpm changeset publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Releases
+        run: |
+          # Create release for core
+          gh release create "@magicmock/core@0.8.0" \
+            --title "@magicmock/core@0.8.0" \
+            --notes "Release @magicmock/core@0.8.0" \
+            --verify-tag
+
+          # Create release for unplugin
+          gh release create "@magicmock/unplugin@0.7.0" \
+            --title "@magicmock/unplugin@0.7.0" \
+            --notes "Release @magicmock/unplugin@0.7.0" \
+            --verify-tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
