@@ -1,5 +1,11 @@
 # @magicmock/core
 
+## 0.8.0
+
+### Minor Changes
+
+- b75c786: Refactor the unplugin package architecture and adds support for configurable Magic Mock endpoints
+
 ## 0.7.0
 
 ### Minor Changes
