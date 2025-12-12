@@ -72,6 +72,15 @@ export default defineConfig({
         baseURL: 'http://localhost:5173',
       },
     },
+
+    {
+      name: 'webpack-react',
+      testDir: './e2e/webpack-react',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://localhost:8081',
+      },
+    },
   ],
   webServer: [
     {
@@ -84,6 +93,12 @@ export default defineConfig({
       port: 8080,
       reuseExistingServer: !process.env.CI,
       timeout: 30000, // Vue CLI can take longer to start
+    },
+    {
+      command: 'cd examples/webpack-react && pnpm dev',
+      port: 8081,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120000, // Webpack can take longer to start
     },
     {
       command: 'cd examples/simple-jquery && npx http-server -p 3002 --silent',

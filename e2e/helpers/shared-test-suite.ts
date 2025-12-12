@@ -126,7 +126,7 @@ export function createMagicMockTestSuite(projectName: string) {
     })
   })
 
-  test.describe.only(`Magic Mock - Mocking Mode (${projectName})`, () => {
+  test.describe(`Magic Mock - Mocking Mode (${projectName})`, () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/')
       await waitForPageReady(page)
