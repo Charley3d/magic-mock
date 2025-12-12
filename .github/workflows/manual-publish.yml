@@ -46,7 +46,7 @@ jobs:
           git push origin @magicmock/unplugin@0.7.0
 
       - name: Publish to npm
-        run: pnpm changeset publish
+        run: pnpm -r publish --access public --no-git-checks
 
       - name: Create GitHub Releases
         run: |
