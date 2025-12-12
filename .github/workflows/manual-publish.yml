@@ -4,6 +4,9 @@ name: Manual Publish
 # due to the workflow skip condition bug
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
@@ -44,9 +47,6 @@ jobs:
 
       - name: Publish to npm
         run: pnpm changeset publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Releases
         run: |
