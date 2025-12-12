@@ -63,9 +63,9 @@ const unpluginFactory: UnpluginFactory<MagicMockOptions | undefined> = (options 
     // Webpack-specific hooks
     webpack(compiler) {
       console.log('🚀 Magic Mock Webpack plugin loaded!')
+      createCacheDir(cacheDir)
       // Ensure cache directory exists
       compiler.hooks.beforeRun.tapAsync('magic-mock', (_, callback) => {
-        createCacheDir(cacheDir)
         console.log('✅ Magic Mock initialized - cache dir:', cacheDir)
         callback()
       })

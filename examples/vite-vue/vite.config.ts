@@ -6,7 +6,7 @@ import { defineConfig } from 'vite'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   const endpoints = {
     apiPrefix: process.env.MAGIC_MOCK_API_PREFIX || '/chamagic',
     getCachePath: process.env.MAGIC_MOCK_GET_CACHE_PATH || '/get-mock',
