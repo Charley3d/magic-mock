@@ -3,19 +3,13 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MagicMock = require('@magicmock/unplugin/webpack').default
 const { createDevServerConfig } = require('@magicmock/unplugin/webpack')
 
-const apiPrefix = '/chamagic'
-const getCachePath = '/restore'
-const setCachePath = '/store'
-
-const options = {
-  endpoints: {
-    apiPrefix,
-    getCachePath,
-    setCachePath,
-  },
+const endpoints = {
+  apiPrefix: process.env.MAGIC_MOCK_API_PREFIX || '/chamagic',
+  getCachePath: process.env.MAGIC_MOCK_GET_CACHE_PATH || '/get-mock',
+  setCachePath: process.env.MAGIC_MOCK_SET_CACHE_PATH || '/set-mock',
 }
 
-const magicMock = MagicMock(options)
+const magicMock = MagicMock({ endpoints })
 
 module.exports = {
   entry: './src/index.tsx',
@@ -61,7 +55,7 @@ module.exports = {
       }
 
       // Setup Magic Mock endpoints using the helper function
-      const setupEndpoints = createDevServerConfig(options)
+      const setupEndpoints = createDevServerConfig({ endpoints })
       setupEndpoints(devServer)
 
       return middlewares
