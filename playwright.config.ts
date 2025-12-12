@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
+import dotenv from 'dotenv'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+setTestEnvironment()
 
 /**
  * Playwright configuration for Magic Mock E2E tests
@@ -70,7 +75,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'cd examples/vite-vue && pnpm dev',
+      command: 'cd examples/vite-vue && pnpm dev --mode test',
       port: 5173,
       reuseExistingServer: !process.env.CI,
     },
@@ -78,7 +83,7 @@ export default defineConfig({
       command: 'cd examples/cli-vue && pnpm serve',
       port: 8080,
       reuseExistingServer: !process.env.CI,
-      timeout: 120000, // Vue CLI can take longer to start
+      timeout: 30000, // Vue CLI can take longer to start
     },
     {
       command: 'cd examples/simple-jquery && npx http-server -p 3002 --silent',
@@ -92,3 +97,9 @@ export default defineConfig({
     },
   ],
 })
+function setTestEnvironment() {
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = path.dirname(__filename)
+
+  dotenv.config({ path: path.resolve(__dirname, '.env.test') })
+}

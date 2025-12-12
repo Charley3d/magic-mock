@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Monorepo for Magic Mock - HTTP request recording and replay for development",
   "scripts": {
-    "build": "pnpm -r --filter './packages/*' build",
-    "dev": "pnpm -r --parallel --filter './packages/*' dev",
-    "test": "pnpm -r --filter './packages/*' test",
+    "build": "pnpm -r --filter \"./packages/*\" build",
+    "dev": "pnpm -r --parallel --filter \"./packages/*\" dev",
+    "test": "pnpm -r --filter \"./packages/*\" test",
     "test:e2e": "playwright test",
     "test:e2e:simple-axios": "playwright test --project=simple-axios --ui",
     "test:e2e:simple-jquery": "playwright test --project=simple-jquery",
@@ -28,6 +28,7 @@
     "@changesets/cli": "^2.29.7",
     "@playwright/test": "^1.57.0",
     "@types/node": "^22.19.1",
+    "dotenv": "^17.2.3",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.6.2",
@@ -37,5 +38,6 @@
   "engines": {
     "node": "^20.19.0 || >=22.12.0",
     "pnpm": ">=9.0.0"
-  }
+  },
+  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
 }
