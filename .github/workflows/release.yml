@@ -35,11 +35,6 @@ jobs:
       pull-requests: write # Needed to create version PRs
       id-token: write # Needed for npm provenance (trusted publishing)
 
-    # Only run if the push is not from the github-actions bot (prevents infinite loops)
-    if: >
-      !contains(github.event.head_commit.message, 'ci: version packages') &&
-      github.actor != 'github-actions[bot]'
-
     steps:
       # Step 0: Dry run check
       - name: Dry run - skipping publish
