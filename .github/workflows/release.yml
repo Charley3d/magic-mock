@@ -32,6 +32,7 @@ jobs:
     # Required permissions for the workflow
     permissions:
       contents: write # Needed to push version commits and tags
+      pull-requests: write # Needed to create version PRs
       id-token: write # Needed for npm provenance (trusted publishing)
 
     # Only run if the push is not from the github-actions bot (prevents infinite loops)
@@ -103,12 +104,20 @@ jobs:
           # This creates a verifiable link between packages and their source code
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Step 9: Log published packages
-      - name: Log published packages
-        if: steps.check-changesets.outputs.has_changesets == 'true' && steps.changesets.outputs.published == 'true' && env.DRY_RUN == 'false'
+      # Step 9: Log changeset action results
+      - name: Log changeset results
+        if: steps.check-changesets.outputs.has_changesets == 'true' && env.DRY_RUN == 'false'
         run: |
-          echo "📦 Published packages:"
-          echo "${{ steps.changesets.outputs.publishedPackages }}" | jq -r '.[] | "  - \(.name)@\(.version)"'
+          if [ "${{ steps.changesets.outputs.published }}" == "true" ]; then
+            echo "📦 Published packages:"
+            echo "${{ steps.changesets.outputs.publishedPackages }}" | jq -r '.[] | "  - \(.name)@\(.version)"'
+          elif [ "${{ steps.changesets.outputs.hasChangesets }}" == "true" ]; then
+            echo "📝 Version PR created or updated"
+            echo "PR Number: ${{ steps.changesets.outputs.pullRequestNumber }}"
+            echo "Please review and merge the version PR to publish packages"
+          else
+            echo "✅ No changesets to process"
+          fi
 
       # Step 10: Create GitHub releases for published packages
       - name: Create GitHub Releases
