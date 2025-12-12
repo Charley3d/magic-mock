@@ -60,7 +60,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/charley3d/magic-mock.git",
+    "url": "git+https://github.com/charley3d/magic-mock.git",
     "directory": "packages/core"
   },
   "bugs": {
@@ -81,6 +81,6 @@
     "access": "public"
   },
   "bin": {
-    "magicmock": "./dist/cli.js"
+    "magicmock": "dist/cli.js"
   }
 }
