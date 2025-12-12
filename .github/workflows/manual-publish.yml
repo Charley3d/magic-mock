@@ -45,8 +45,9 @@ jobs:
           git push origin @magicmock/core@0.8.0
           git push origin @magicmock/unplugin@0.7.0
 
-      - name: Publish to npm
-        run: pnpm -r publish --access public --no-git-checks
+      - name: Update npm
+        run: npm install -g npm@latest
+      - run: npm publish
 
       - name: Create GitHub Releases
         run: |
