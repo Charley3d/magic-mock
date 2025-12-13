@@ -116,13 +116,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/charley3d/magic-mock.git",
+    "url": "git+https://github.com/Charley3d/magic-mock.git",
     "directory": "packages/unplugin"
   },
   "bugs": {
-    "url": "https://github.com/charley3d/magic-mock/issues"
+    "url": "https://github.com/Charley3d/magic-mock/issues"
   },
-  "homepage": "https://github.com/charley3d/magic-mock/tree/main/packages/unplugin#readme",
+  "homepage": "https://github.com/Charley3d/magic-mock/tree/main/packages/unplugin#readme",
   "keywords": [
     "unplugin",
     "vite",
