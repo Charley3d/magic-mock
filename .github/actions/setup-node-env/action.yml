@@ -3,13 +3,17 @@ description: 'Setup Node.js and pnpm, and install dependencies'
 
 inputs:
   registry-url:
-    description: 'Optional npm registry URL for publishing (e.g., https://registry.npmjs.org)'
+    description: 'npm registry URL (optional)'
     required: false
     default: ''
   install-timeout:
-    description: 'Timeout in minutes for pnpm install (default: 5)'
+    description: 'Timeout in minutes for pnpm install'
     required: false
-    default: '5'
+    default: '2'
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: '22.12.0'
 
 runs:
   using: composite
@@ -20,10 +24,12 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: '22.12.0'
-        registry-url: 'https://registry.npmjs.org'
-        cache: 'pnpm'
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+        registry-url: ${{ inputs.registry-url != '' && inputs.registry-url || null }}
 
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --frozen-lockfile --reporter=append-only
       shell: bash
+      env:
+        PNPM_INSTALL_TIMEOUT: ${{ inputs.install-timeout }}
