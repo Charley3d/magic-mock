@@ -122,7 +122,7 @@
   "bugs": {
     "url": "https://github.com/Charley3d/magic-mock/issues"
   },
-  "homepage": "https://github.com/Charley3d/magic-mock/tree/main/packages/unplugin#readme",
+  "homepage": "https://github.com/Charley3d/magic-mock/tree/master/packages/unplugin#readme",
   "keywords": [
     "unplugin",
     "vite",

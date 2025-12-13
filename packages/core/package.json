@@ -66,7 +66,7 @@
   "bugs": {
     "url": "https://github.com/Charley3d/magic-mock/issues"
   },
-  "homepage": "https://github.com/Charley3d/magic-mock/tree/main/packages/core#readme",
+  "homepage": "https://github.com/Charley3d/magic-mock/tree/master/packages/core#readme",
   "keywords": [
     "mock",
     "http",
